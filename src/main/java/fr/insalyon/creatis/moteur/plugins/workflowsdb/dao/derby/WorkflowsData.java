@@ -34,6 +34,7 @@
  */
 package fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.derby;
 
+import fr.cnrs.i3s.moteur2.log.Log;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.WorkflowsDAO;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.bean.WorkflowBean;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException;
@@ -43,7 +44,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import org.apache.log4j.Logger;
 
 /**
  *
@@ -51,7 +51,7 @@ import org.apache.log4j.Logger;
  */
 public class WorkflowsData implements WorkflowsDAO {
 
-    private static Logger logger = Logger.getLogger(WorkflowsData.class);
+    private static Log logger = new Log();
     public static WorkflowsData instance;
     private final String DRIVER = "org.apache.derby.jdbc.ClientDriver";
     private final String DBURL = "jdbc:derby://localhost:1527/";
@@ -83,10 +83,10 @@ public class WorkflowsData implements WorkflowsDAO {
                 createTables();
 
             } catch (SQLException ex1) {
-                logger.error(ex1.getMessage());
+                logger.warning("[WorkflowListener] " + ex1.getMessage());
             }
         } catch (ClassNotFoundException ex) {
-            logger.error(ex.getMessage());
+            logger.warning("[WorkflowListener] " + ex.getMessage());
         }
     }
 
@@ -109,12 +109,23 @@ public class WorkflowsData implements WorkflowsDAO {
                     + "ON Workflows(username)");
         } catch (SQLException ex) {
             try {
-                logger.info("Table Workflows already created!");
+                logger.print("[WorkflowListener] Table Workflows already exists!");
                 connection.createStatement().executeUpdate("ALTER TABLE Workflows "
                         + "ADD COLUMN finish_time TIMESTAMP");
             } catch (SQLException ex1) {
-                logger.info("Column finish_time already created!");
+                logger.print("[WorkflowListener] Column finish_time already created!");
             }
+        }
+
+        try {
+            Statement stat = connection.createStatement();
+            stat.executeUpdate("CREATE TABLE Outputs ("
+                    + "workflow_id VARCHAR(255), "
+                    + "path VARCHAR(255), "
+                    + "PRIMARY KEY (workflow_id, path)"
+                    + ")");
+        } catch (SQLException ex) {
+            logger.print("[WorkflowListener] Table Outputs already exists.");
         }
     }
 
@@ -125,7 +136,7 @@ public class WorkflowsData implements WorkflowsDAO {
         try {
             connection.close();
         } catch (SQLException ex) {
-            logger.error(ex.getMessage());
+            logger.warning("[WorkflowListener] " + ex.getMessage());
         }
     }
 
@@ -179,6 +190,28 @@ public class WorkflowsData implements WorkflowsDAO {
             stat.setString(6, workflow.getMinorStatus());
             stat.setString(7, workflow.getId());
             stat.executeUpdate();
+
+        } catch (SQLException ex) {
+            throw new DAOException(ex.getMessage());
+        }
+    }
+
+    /**
+     * 
+     * @param workflowID Workflow identification
+     * @param path
+     * @throws DAOException
+     */
+    @Override
+    public void addOutput(String workflowID, String path) throws DAOException {
+        try {
+            PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO Outputs(workflow_id, path) "
+                    + "VALUES (?, ?)");
+
+            ps.setString(1, workflowID);
+            ps.setString(2, path);
+            ps.execute();
 
         } catch (SQLException ex) {
             throw new DAOException(ex.getMessage());

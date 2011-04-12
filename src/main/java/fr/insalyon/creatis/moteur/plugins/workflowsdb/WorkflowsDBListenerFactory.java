@@ -37,7 +37,6 @@ package fr.insalyon.creatis.moteur.plugins.workflowsdb;
 import fr.cnrs.i3s.moteur2.execution.WorkflowListener;
 import fr.cnrs.i3s.moteur2.plugins.ListenerFactoryInterface;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
-import org.apache.log4j.Logger;
 
 /**
  *
@@ -46,14 +45,11 @@ import org.apache.log4j.Logger;
 @PluginImplementation
 public class WorkflowsDBListenerFactory implements ListenerFactoryInterface {
 
-    private static Logger logger = Logger.getLogger(WorkflowsDBListenerFactory.class);
-
     public WorkflowsDBListenerFactory() {
     }
 
     @Override
     public WorkflowListener createWorkflowListner() {
-        logger.info("Loading Workflows DB Listener");
         return new WorkflowsDBListener();
     }
 }

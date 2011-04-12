@@ -39,6 +39,7 @@ import fr.cnrs.i3s.moteur2.data.DataItem;
 import fr.cnrs.i3s.moteur2.data.DataLine;
 import fr.cnrs.i3s.moteur2.execution.Workflow;
 import fr.cnrs.i3s.moteur2.execution.WorkflowListener;
+import fr.cnrs.i3s.moteur2.log.Log;
 import fr.cnrs.i3s.moteur2.processor.OutputPort;
 import fr.cnrs.i3s.moteur2.processor.Processor;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.DAOFactory;
@@ -51,9 +52,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.HashMap;
-import org.apache.log4j.Logger;
 
 /**
  *
@@ -65,7 +67,7 @@ public class WorkflowsDBListener implements WorkflowListener {
 
         Completed, Running, Killed
     };
-    private static Logger logger = Logger.getLogger(WorkflowsDBListener.class);
+    private static Log logger = new Log();
     private String workflowPath;
     private WorkflowsDAO workflowDAO;
     private WorkflowBean workflowBean;
@@ -83,14 +85,14 @@ public class WorkflowsDBListener implements WorkflowListener {
                     new DataInputStream(new FileInputStream("user.txt"))));
             String line = br.readLine().split("/")[5];
             String user = line.substring(line.lastIndexOf("=") + 1);
-            logger.info("Workflows Started with ID: " + id + " - and Key: " + key);
+            logger.print("[WorkflowListener] Workflow Started with ID: " + id + " - and Key: " + key);
             workflowBean = new WorkflowBean(workflowPath, workflow.getName(), user, new Date(), Status.Running.toString(), "Execution Started", id, key);
             workflowDAO.add(workflowBean);
 
         } catch (IOException ex) {
-            logger.error(ex.getMessage());
+            logger.warning("[WorkflowListener] " + ex.getMessage());
         } catch (DAOException ex) {
-            logger.error(ex.getMessage());
+            logger.warning("[WorkflowListener] " + ex.getMessage());
         }
     }
 
@@ -106,7 +108,7 @@ public class WorkflowsDBListener implements WorkflowListener {
             workflowDAO.update(workflowBean);
 
         } catch (DAOException ex) {
-            logger.error(ex.getMessage());
+            logger.warning("[WorkflowListener] " + ex.getMessage());
         }
     }
 
@@ -117,12 +119,27 @@ public class WorkflowsDBListener implements WorkflowListener {
             workflowDAO.update(workflowBean);
 
         } catch (DAOException ex) {
-            logger.error(ex.getMessage());
+            logger.warning("[WorkflowListener] " + ex.getMessage());
         }
     }
 
     @Override
     public void processorRan(Workflow workflow, Processor processor, int nruns, boolean completed, DataLine line, HashMap<OutputPort, Data> produced) {
+        try {
+            if (produced != null) {
+                for (Data d : produced.values()) {
+                    if (d.toString().contains("lfn://")) {
+                        String path = new URI(d.toString()).getPath();
+                        System.out.println("[PLUGIN]: Adding path '" + path + "'");
+                        workflowDAO.addOutput(workflowBean.getId(), path);
+                    }
+                }
+            }
+        } catch (URISyntaxException ex) {
+            logger.warning("[WorkflowListener] " + ex.getMessage());
+        } catch (DAOException ex) {
+            logger.warning("[WorkflowListener] " + ex.getMessage());
+        }
     }
 
     @Override
