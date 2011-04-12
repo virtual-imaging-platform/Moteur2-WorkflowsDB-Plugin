@@ -85,7 +85,6 @@ public class WorkflowsDBListener implements WorkflowListener {
                     new DataInputStream(new FileInputStream("user.txt"))));
             String line = br.readLine().split("/")[5];
             String user = line.substring(line.lastIndexOf("=") + 1);
-            logger.print("[WorkflowListener] Workflow Started with ID: " + id + " - and Key: " + key);
             workflowBean = new WorkflowBean(workflowPath, workflow.getName(), user, new Date(), Status.Running.toString(), "Execution Started", id, key);
             workflowDAO.add(workflowBean);
 
@@ -128,9 +127,9 @@ public class WorkflowsDBListener implements WorkflowListener {
         try {
             if (produced != null) {
                 for (Data d : produced.values()) {
-                    if (d.toString().contains("lfn://")) {
+                    if (d.toString().startsWith("lfn://")) {
                         String path = new URI(d.toString()).getPath();
-                        System.out.println("[PLUGIN]: Adding path '" + path + "'");
+                        logger.print("[WorkflowListener] Adding output '" + path + "'");
                         workflowDAO.addOutput(workflowBean.getId(), path);
                     }
                 }
@@ -138,7 +137,9 @@ public class WorkflowsDBListener implements WorkflowListener {
         } catch (URISyntaxException ex) {
             logger.warning("[WorkflowListener] " + ex.getMessage());
         } catch (DAOException ex) {
-            logger.warning("[WorkflowListener] " + ex.getMessage());
+            if (!ex.getMessage().contains("The statement was aborted because it would have caused a duplicate key value")) {
+                logger.warning("[WorkflowListener] " + ex.getMessage());
+            }
         }
     }
 
