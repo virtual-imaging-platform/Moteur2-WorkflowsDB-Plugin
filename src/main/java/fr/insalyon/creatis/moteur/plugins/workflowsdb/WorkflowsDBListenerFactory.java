@@ -36,6 +36,8 @@ package fr.insalyon.creatis.moteur.plugins.workflowsdb;
 
 import fr.cnrs.i3s.moteur2.execution.WorkflowListener;
 import fr.cnrs.i3s.moteur2.plugins.ListenerFactoryInterface;
+import fr.cnrs.i3s.moteur2.plugins.PluginDescriptor;
+import fr.cnrs.i3s.moteur2.preferences.ServerPreferences;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
 
 /**
@@ -45,7 +47,20 @@ import net.xeoh.plugins.base.annotations.PluginImplementation;
 @PluginImplementation
 public class WorkflowsDBListenerFactory implements ListenerFactoryInterface {
 
+    public static String HOST;
+    public static int PORT;
+
     public WorkflowsDBListenerFactory() {
+        
+        for (PluginDescriptor pd : ServerPreferences.getPreferences().getListenerPlugins()) {
+            if (pd.getURI().toString().contains("workflowsdb")) {
+                String host = pd.getParameter("host");
+                String port = pd.getParameter("port");
+                HOST = host != null ? host : "localhost";
+                PORT = port != null ? new Integer(port) : 1527;
+                break;
+            }
+        }
     }
 
     @Override

@@ -35,6 +35,7 @@
 package fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.derby;
 
 import fr.cnrs.i3s.moteur2.log.Log;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.WorkflowsDBListenerFactory;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.WorkflowsDAO;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.bean.WorkflowBean;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException;
@@ -54,10 +55,11 @@ public class WorkflowsData implements WorkflowsDAO {
     private static Log logger = new Log();
     public static WorkflowsData instance;
     private final String DRIVER = "org.apache.derby.jdbc.ClientDriver";
-    private final String DBURL = "jdbc:derby://localhost:1527/";
     private final String DBPATH = "/var/www/workflows-db";
+    private String DBURL = "jdbc:derby://" + WorkflowsDBListenerFactory.HOST 
+            + ":" + WorkflowsDBListenerFactory.PORT + "/";
     private Connection connection;
-
+    
     /**
      * Gets an unique instance of the class WorkflowData
      * @return Unique instance of WorkflowData
