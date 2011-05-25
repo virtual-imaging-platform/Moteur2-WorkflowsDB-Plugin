@@ -34,9 +34,11 @@
  */
 package fr.insalyon.creatis.moteur.plugins.workflowsdb;
 
+import fr.cnrs.i3s.moteur2.execution.Workflow;
 import fr.cnrs.i3s.moteur2.execution.WorkflowListener;
 import fr.cnrs.i3s.moteur2.plugins.ListenerFactoryInterface;
 import fr.cnrs.i3s.moteur2.plugins.PluginDescriptor;
+import fr.cnrs.i3s.moteur2.plugins.PluginException;
 import fr.cnrs.i3s.moteur2.preferences.ServerPreferences;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
 
@@ -64,7 +66,7 @@ public class WorkflowsDBListenerFactory implements ListenerFactoryInterface {
     }
 
     @Override
-    public WorkflowListener createWorkflowListner() {
+    public WorkflowListener createWorkflowListner(Workflow workflow) throws PluginException {
         return new WorkflowsDBListener();
     }
 }
