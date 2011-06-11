@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -68,24 +68,22 @@ public class WorkflowsDBListener implements WorkflowListener {
         Completed, Running, Killed
     };
     private static Log logger = new Log();
-    private String workflowPath;
     private WorkflowsDAO workflowDAO;
     private WorkflowBean workflowBean;
 
-    public WorkflowsDBListener() {
-        String path = new File("").getAbsolutePath();
-        this.workflowPath = path.substring(path.lastIndexOf("/") + 1, path.length());
-        workflowDAO = DAOFactory.getDAOFactory().getWorkflowDAO();
-    }
+    public WorkflowsDBListener(Workflow workflow) {
 
-    @Override
-    public void executionStarted(Workflow workflow, int id, int key) {
         try {
+            String path = new File("").getAbsolutePath();
+            String workflowPath = path.substring(path.lastIndexOf("/") + 1, path.length());
+            workflowDAO = DAOFactory.getDAOFactory().getWorkflowDAO();
+
             BufferedReader br = new BufferedReader(new InputStreamReader(
                     new DataInputStream(new FileInputStream("user.txt"))));
             String line = br.readLine().split("/")[5];
             String user = line.substring(line.lastIndexOf("=") + 1);
-            workflowBean = new WorkflowBean(workflowPath, workflow.getName(), user, new Date(), Status.Running.toString(), "Execution Started", id, key);
+            workflowBean = new WorkflowBean(workflowPath, workflow.getName(), user,
+                    new Date(), Status.Running.name(), "Execution Started", 0, 0);
             workflowDAO.add(workflowBean);
 
         } catch (IOException ex) {
@@ -96,12 +94,16 @@ public class WorkflowsDBListener implements WorkflowListener {
     }
 
     @Override
+    public void executionStarted(Workflow workflow, int id, int key) {
+    }
+
+    @Override
     public void executionCompleted(Workflow workflow, boolean completed) {
         try {
             if (completed) {
-                workflowBean.setMajorStatus(Status.Completed.toString());
+                workflowBean.setMajorStatus(Status.Completed.name());
             } else {
-                workflowBean.setMajorStatus(Status.Killed.toString());
+                workflowBean.setMajorStatus(Status.Killed.name());
             }
             workflowBean.setFinishTime(new Date());
             workflowDAO.update(workflowBean);
@@ -109,6 +111,7 @@ public class WorkflowsDBListener implements WorkflowListener {
         } catch (DAOException ex) {
             logger.warning("[WorkflowListener] " + ex.getMessage());
         }
+        workflowDAO.close();
     }
 
     @Override
@@ -137,7 +140,7 @@ public class WorkflowsDBListener implements WorkflowListener {
         } catch (URISyntaxException ex) {
             logger.warning("[WorkflowListener] " + ex.getMessage());
         } catch (DAOException ex) {
-            if (!ex.getMessage().contains("The statement was aborted because it would have caused a duplicate key value")) {
+            if (!ex.getMessage().contains("duplicate key value")) {
                 logger.warning("[WorkflowListener] " + ex.getMessage());
             }
         }

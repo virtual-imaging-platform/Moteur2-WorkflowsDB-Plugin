@@ -48,4 +48,6 @@ public interface WorkflowsDAO {
     public void update(WorkflowBean workflow) throws DAOException;
 
     public void addOutput(String workflowID, String path) throws DAOException;
+    
+    public void close();
 }

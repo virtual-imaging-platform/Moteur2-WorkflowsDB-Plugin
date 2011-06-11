@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -35,11 +35,11 @@
 package fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.derby;
 
 import fr.cnrs.i3s.moteur2.log.Log;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.WorkflowsDBListenerFactory;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.Configuration;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.AbstractData;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.WorkflowsDAO;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.bean.WorkflowBean;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException;
-import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -50,16 +50,14 @@ import java.sql.Timestamp;
  *
  * @author Rafael Silva
  */
-public class WorkflowsData implements WorkflowsDAO {
+public class WorkflowsData extends AbstractData implements WorkflowsDAO {
 
     private static Log logger = new Log();
-    public static WorkflowsData instance;
+    private static WorkflowsData instance;
     private final String DRIVER = "org.apache.derby.jdbc.ClientDriver";
-    private final String DBPATH = "/var/www/workflows-db";
-    private String DBURL = "jdbc:derby://" + WorkflowsDBListenerFactory.HOST 
-            + ":" + WorkflowsDBListenerFactory.PORT + "/";
-    private Connection connection;
-    
+    private String DBURL = "jdbc:derby://" + Configuration.HOST
+            + ":" + Configuration.PORT + "/";
+
     /**
      * Gets an unique instance of the class WorkflowData
      * @return Unique instance of WorkflowData
@@ -73,20 +71,26 @@ public class WorkflowsData implements WorkflowsDAO {
 
     private WorkflowsData() {
         try {
-            Class.forName(DRIVER);
-            connection = DriverManager.getConnection(DBURL + DBPATH + ";create=true");
-            connection.setAutoCommit(true);
+            connect();
             createTables();
 
         } catch (SQLException ex) {
-            try {
-                connection = DriverManager.getConnection(DBURL + DBPATH);
-                connection.setAutoCommit(true);
-                createTables();
+            logger.warning("[WorkflowListener] " + ex.getMessage());
+        }
+    }
 
-            } catch (SQLException ex1) {
-                logger.warning("[WorkflowListener] " + ex1.getMessage());
-            }
+    @Override
+    protected synchronized void connect() throws SQLException {
+        try {
+            Class.forName(DRIVER);
+            connection = DriverManager.getConnection(DBURL + Configuration.DB_PATH
+                    + ";create=true");
+            connection.setAutoCommit(true);
+
+        } catch (SQLException ex) {
+            connection = DriverManager.getConnection(DBURL + Configuration.DB_PATH);
+            connection.setAutoCommit(true);
+
         } catch (ClassNotFoundException ex) {
             logger.warning("[WorkflowListener] " + ex.getMessage());
         }
@@ -105,18 +109,13 @@ public class WorkflowsData implements WorkflowsDAO {
                     + "minor_status VARCHAR(100), "
                     + "moteur_id INTEGER, "
                     + "moteur_key INTEGER, "
+                    + "finish_time TIMESTAMP, "
                     + "PRIMARY KEY (id)"
                     + ")");
             stat.executeUpdate("CREATE INDEX username_workflow_idx "
                     + "ON Workflows(username)");
         } catch (SQLException ex) {
-            try {
-                logger.print("[WorkflowListener] Table Workflows already exists!");
-                connection.createStatement().executeUpdate("ALTER TABLE Workflows "
-                        + "ADD COLUMN finish_time TIMESTAMP");
-            } catch (SQLException ex1) {
-                logger.print("[WorkflowListener] Column finish_time already created!");
-            }
+            logger.print("[WorkflowListener] Table Workflows already exists!");
         }
 
         try {
@@ -134,6 +133,7 @@ public class WorkflowsData implements WorkflowsDAO {
     /**
      * Close the database connection
      */
+    @Override
     public synchronized void close() {
         try {
             connection.close();
@@ -150,7 +150,7 @@ public class WorkflowsData implements WorkflowsDAO {
     @Override
     public synchronized void add(WorkflowBean workflow) throws DAOException {
         try {
-            PreparedStatement ps = connection.prepareStatement(
+            PreparedStatement ps = prepareStatement(
                     "INSERT INTO Workflows(id, application, username, launched, "
                     + "status, minor_status, moteur_id, moteur_key) "
                     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
@@ -163,10 +163,13 @@ public class WorkflowsData implements WorkflowsDAO {
             ps.setString(6, workflow.getMinorStatus());
             ps.setInt(7, workflow.getMoteurID());
             ps.setInt(8, workflow.getMoteurKey());
-            ps.execute();
+
+            execute(ps);
 
         } catch (SQLException ex) {
-            throw new DAOException(ex.getMessage());
+            if (!ex.getMessage().contains("duplicate key value")) {
+                throw new DAOException(ex.getMessage());
+            }
         }
     }
 
@@ -178,20 +181,21 @@ public class WorkflowsData implements WorkflowsDAO {
     @Override
     public synchronized void update(WorkflowBean workflow) throws DAOException {
         try {
-            PreparedStatement stat = connection.prepareStatement("UPDATE "
+            PreparedStatement ps = prepareStatement("UPDATE "
                     + "Workflows "
                     + "SET application=?, username=?, launched=?, "
                     + "finish_time=?, status=?, minor_status=? "
                     + "WHERE id=?");
 
-            stat.setString(1, workflow.getApplication());
-            stat.setString(2, workflow.getUser());
-            stat.setTimestamp(3, new Timestamp(workflow.getStartTime().getTime()));
-            stat.setTimestamp(4, new Timestamp(workflow.getFinishTime().getTime()));
-            stat.setString(5, workflow.getMajorStatus());
-            stat.setString(6, workflow.getMinorStatus());
-            stat.setString(7, workflow.getId());
-            stat.executeUpdate();
+            ps.setString(1, workflow.getApplication());
+            ps.setString(2, workflow.getUser());
+            ps.setTimestamp(3, new Timestamp(workflow.getStartTime().getTime()));
+            ps.setTimestamp(4, new Timestamp(workflow.getFinishTime().getTime()));
+            ps.setString(5, workflow.getMajorStatus());
+            ps.setString(6, workflow.getMinorStatus());
+            ps.setString(7, workflow.getId());
+
+            executeUpdate(ps);
 
         } catch (SQLException ex) {
             throw new DAOException(ex.getMessage());
@@ -205,18 +209,21 @@ public class WorkflowsData implements WorkflowsDAO {
      * @throws DAOException
      */
     @Override
-    public void addOutput(String workflowID, String path) throws DAOException {
+    public synchronized void addOutput(String workflowID, String path) throws DAOException {
         try {
-            PreparedStatement ps = connection.prepareStatement(
+            PreparedStatement ps = prepareStatement(
                     "INSERT INTO Outputs(workflow_id, path) "
                     + "VALUES (?, ?)");
 
             ps.setString(1, workflowID);
             ps.setString(2, path);
-            ps.execute();
+
+            execute(ps);
 
         } catch (SQLException ex) {
-            throw new DAOException(ex.getMessage());
+            if (!ex.getMessage().contains("duplicate key value")) {
+                throw new DAOException(ex.getMessage());
+            }
         }
     }
 }

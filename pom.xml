@@ -5,7 +5,7 @@
     <groupId>fr.insalyon.creatis</groupId>
     <artifactId>moteur-workflowsdb-plugin</artifactId>
     <packaging>jar</packaging>
-    <version>0.3</version>
+    <version>0.4</version>
     <name>Moteur-WorkflowsDB-Plugin</name>
     <url>http://maven.apache.org</url>
     <build>

@@ -34,34 +34,13 @@
  */
 package fr.insalyon.creatis.moteur.plugins.workflowsdb;
 
-import fr.cnrs.i3s.moteur2.execution.Workflow;
-import fr.cnrs.i3s.moteur2.execution.WorkflowListener;
-import fr.cnrs.i3s.moteur2.plugins.ListenerFactoryInterface;
-import fr.cnrs.i3s.moteur2.plugins.MoteurPlugins;
-import fr.cnrs.i3s.moteur2.plugins.PluginException;
-import java.util.HashMap;
-import net.xeoh.plugins.base.annotations.PluginImplementation;
-
 /**
  *
  * @author Rafael Silva
  */
-@PluginImplementation
-public class WorkflowsDBListenerFactory implements ListenerFactoryInterface {
+public class Configuration {
 
-    public WorkflowsDBListenerFactory() {
-
-        HashMap<String, String> parameters = MoteurPlugins.getPluginDescriptor(this).getParameters();
-        String host = parameters.get("host");
-        String port = parameters.get("port");
-        String path = parameters.get("path");
-        Configuration.HOST = host != null ? host : "localhost";
-        Configuration.PORT = port != null ? new Integer(port) : 1527;
-        Configuration.DB_PATH = path != null ? path : "/var/www/workflows-db";
-    }
-
-    @Override
-    public WorkflowListener createWorkflowListner(Workflow workflow) throws PluginException {
-        return new WorkflowsDBListener(workflow);
-    }
+    public static String HOST;
+    public static int PORT;
+    public static String DB_PATH;
 }

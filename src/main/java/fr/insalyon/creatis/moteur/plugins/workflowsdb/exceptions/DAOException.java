@@ -2,7 +2,7 @@
  *
  * Rafael Silva
  * rafael.silva@creatis.insa-lyon.fr
- * http://www.creatis.insa-lyon.fr/~silva
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -41,11 +41,7 @@ import fr.cnrs.i3s.moteur2.exceptions.MoteurException;
  * @author Rafael Silva
  */
 public class DAOException extends MoteurException {
-
-    /**
-     * Exception construction
-     * @param message error explanation message
-     */
+    
     public DAOException(String message) {
         super(message);
     }
