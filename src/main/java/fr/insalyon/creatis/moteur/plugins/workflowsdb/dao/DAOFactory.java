@@ -1,8 +1,8 @@
- /* Copyright CNRS-I3S
+/* Copyright CNRS-CREATIS
  *
- * Johan Montagnat
- * johan@i3s.unice.fr
- * http://www.i3s.unice.fr/~johan
+ * Rafael Silva
+ * rafael.silva@creatis.insa-lyon.fr
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *

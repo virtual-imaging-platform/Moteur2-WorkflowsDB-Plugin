@@ -7,7 +7,6 @@
     <packaging>jar</packaging>
     <version>0.4</version>
     <name>Moteur-WorkflowsDB-Plugin</name>
-    <url>http://maven.apache.org</url>
     <build>
         <plugins>
             <plugin>
@@ -26,6 +25,7 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
+                    <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
                 <executions>
                     <execution>
@@ -66,12 +66,12 @@
     <distributionManagement>
         <repository>
             <id>releases</id>
-            <url>http://kingkong.grid.creatis.insa-lyon.fr:9007/nexus/content/repositories/releases</url>
+            <url>http://vip.creatis.insa-lyon.fr:9007/nexus/content/repositories/releases</url>
         </repository>
         <snapshotRepository>
             <id>snapshots</id>
             <name>Internal Snapshots</name>
-            <url>http://kingkong.grid.creatis.insa-lyon.fr:9007/nexus/content/repositories/snapshots</url>
+            <url>http://vip.creatis.insa-lyon.fr:9007/nexus/content/repositories/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
 </project>

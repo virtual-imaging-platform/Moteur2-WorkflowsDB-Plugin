@@ -1,8 +1,8 @@
- /* Copyright CNRS-I3S
+/* Copyright CNRS-CREATIS
  *
- * Johan Montagnat
- * johan@i3s.unice.fr
- * http://www.i3s.unice.fr/~johan
+ * Rafael Silva
+ * rafael.silva@creatis.insa-lyon.fr
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -47,7 +47,8 @@ public interface WorkflowsDAO {
 
     public void update(WorkflowBean workflow) throws DAOException;
 
-    public void addOutput(String workflowID, String path) throws DAOException;
-    
+    public void addOutput(String workflowID, String path,
+            String processor, String port) throws DAOException;
+
     public void close();
 }
