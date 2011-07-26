@@ -99,7 +99,7 @@ public class WorkflowsDBListener implements WorkflowListener {
 
     @Override
     public void executionCompleted(Workflow workflow, boolean completed) {
-        
+
         try {
             if (completed) {
                 workflowBean.setMajorStatus(Status.Completed.name());
@@ -117,30 +117,47 @@ public class WorkflowsDBListener implements WorkflowListener {
 
     @Override
     public void processorRun(Workflow workflow, Processor processor) {
-        
-        try {
-            workflowBean.setMinorStatus("Executing Processor \"" + processor.getName() + "\"");
-            workflowDAO.update(workflowBean);
-
-        } catch (DAOException ex) {
-            logger.warning("[WorkflowListener] " + ex.getMessage());
-        }
     }
 
     @Override
     public void processorRan(Workflow workflow, Processor processor, int nruns, boolean completed, DataLine line, HashMap<OutputPort, Data> produced) {
+    }
+
+    @Override
+    public void processorFailed(Workflow workflow, Processor processor, int nfailures, boolean completed, String error) {
+    }
+
+    @Override
+    public void processorReceived(Workflow workflow, Processor processor, String port, DataItem item) {
 
         try {
-            if (produced != null) {
-                for (OutputPort o : produced.keySet()) {
-                    Data d = produced.get(o);
-                    if (d.toString().startsWith("lfn://")) {
-                        String path = new URI(d.toString()).getPath();
-                        logger.print("[WorkflowListener] Adding output '" + path + "'");
-                        workflowDAO.addOutput(workflowBean.getId(), path, 
-                                processor.getName(), o.getName());
+            String path = item.dataString();
+
+            if (processor.isOutput() && hasValidData(path)) {
+
+                    String type = "String";
+
+                    if (path.startsWith("lfn://")) {
+                        path = new URI(item.dataString().toString()).getPath();
+                        type = "URI";
                     }
+
+                    logger.print("[WorkflowListener] Adding output '" + path + "'");
+                    workflowDAO.addOutput(workflowBean.getId(), path,
+                            processor.getName(), type);
+
+            } else if (processor.isInput() && hasValidData(path)) {
+
+                String type = "String";
+
+                if (path.startsWith("lfn://")) {
+                    path = new URI(item.dataString().toString()).getPath();
+                    type = "URI";
                 }
+
+                logger.print("[WorkflowListener] Adding input '" + path + "'");
+                workflowDAO.addInput(workflowBean.getId(), path,
+                        processor.getName(), type);
             }
         } catch (URISyntaxException ex) {
             logger.warning("[WorkflowListener] " + ex.getMessage());
@@ -151,11 +168,8 @@ public class WorkflowsDBListener implements WorkflowListener {
         }
     }
 
-    @Override
-    public void processorFailed(Workflow workflow, Processor processor, int nfailures, boolean completed, String error) {
-    }
-
-    @Override
-    public void processorReceived(Workflow workflow, Processor processor, String port, DataItem item) {
+    private boolean hasValidData(String path) {
+        return path != null && !path.equals("<eoa>")
+                && !path.equals("void") && !path.equals("null");
     }
 }

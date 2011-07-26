@@ -124,20 +124,35 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
                     + "workflow_id VARCHAR(255), "
                     + "path VARCHAR(255), "
                     + "processor VARCHAR(255), "
-                    + "port VARCHAR(255), "
-                    + "PRIMARY KEY (workflow_id, path)"
+                    + "type VARCHAR(20), "
+                    + "PRIMARY KEY (workflow_id, path), "
+                    + "FOREIGN KEY(workflow_id) REFERENCES Workflows(id)"
                     + ")");
         } catch (SQLException ex) {
             logger.print("[WorkflowListener] Table Outputs already exists.");
 
             try {
                 Statement stat = connection.createStatement();
+                stat.executeUpdate("ALTER TABLE Outputs ADD COLUMN type VARCHAR(20)");
                 stat.executeUpdate("ALTER TABLE Outputs ADD COLUMN processor VARCHAR(255)");
-                stat.executeUpdate("ALTER TABLE Outputs ADD COLUMN port VARCHAR(255)");
 
             } catch (SQLException ex1) {
                 //TODO
             }
+        }
+
+        try {
+            Statement stat = connection.createStatement();
+            stat.executeUpdate("CREATE TABLE Inputs ("
+                    + "workflow_id VARCHAR(255), "
+                    + "path VARCHAR(255), "
+                    + "processor VARCHAR(255), "
+                    + "type VARCHAR(20), "
+                    + "PRIMARY KEY (workflow_id, path), "
+                    + "FOREIGN KEY(workflow_id) REFERENCES Workflows(id)"
+                    + ")");
+        } catch (SQLException ex) {
+            logger.print("[WorkflowListener] Table Inputs already exists.");
         }
     }
 
@@ -220,21 +235,53 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
      * @param workflowID Workflow identification
      * @param path
      * @param processor
-     * @param port
+     * @param type
      * @throws DAOException
      */
     @Override
     public synchronized void addOutput(String workflowID, String path,
-            String processor, String port) throws DAOException {
+            String processor, String type) throws DAOException {
         try {
             PreparedStatement ps = prepareStatement(
-                    "INSERT INTO Outputs(workflow_id, path, processor, port) "
+                    "INSERT INTO Outputs(workflow_id, path, processor, type) "
                     + "VALUES (?, ?, ?, ?)");
 
             ps.setString(1, workflowID);
             ps.setString(2, path);
             ps.setString(3, processor);
-            ps.setString(4, port);
+            ps.setString(4, type);
+
+            execute(ps);
+
+        } catch (DAOException ex) {
+            if (!ex.getMessage().contains("duplicate key value")) {
+                throw ex;
+            }
+        } catch (SQLException ex) {
+            throw new DAOException(ex.getMessage());
+        }
+    }
+    
+    /**
+     * 
+     * @param workflowID Workflow identification
+     * @param path
+     * @param processor
+     * @param type
+     * @throws DAOException
+     */
+    @Override
+    public synchronized void addInput(String workflowID, String path,
+            String processor, String type) throws DAOException {
+        try {
+            PreparedStatement ps = prepareStatement(
+                    "INSERT INTO Inputs(workflow_id, path, processor, type) "
+                    + "VALUES (?, ?, ?, ?)");
+
+            ps.setString(1, workflowID);
+            ps.setString(2, path);
+            ps.setString(3, processor);
+            ps.setString(4, type);
 
             execute(ps);
 
