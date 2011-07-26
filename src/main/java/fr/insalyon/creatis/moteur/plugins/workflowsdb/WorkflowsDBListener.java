@@ -142,9 +142,9 @@ public class WorkflowsDBListener implements WorkflowListener {
                         type = "URI";
                     }
 
-                    logger.print("[WorkflowListener] Adding output '" + path + "'");
                     workflowDAO.addOutput(workflowBean.getId(), path,
                             processor.getName(), type);
+                    logger.print("[WorkflowListener] Added output '" + path + "'");
 
             } else if (processor.isInput() && hasValidData(path)) {
 
@@ -155,9 +155,9 @@ public class WorkflowsDBListener implements WorkflowListener {
                     type = "URI";
                 }
 
-                logger.print("[WorkflowListener] Adding input '" + path + "'");
                 workflowDAO.addInput(workflowBean.getId(), path,
                         processor.getName(), type);
+                logger.print("[WorkflowListener] Added input '" + path + "'");
             }
         } catch (URISyntaxException ex) {
             logger.warning("[WorkflowListener] " + ex.getMessage());
