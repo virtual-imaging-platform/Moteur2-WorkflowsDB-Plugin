@@ -101,14 +101,13 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
             Statement stat = connection.createStatement();
             stat.executeUpdate("CREATE TABLE Workflows ("
                     + "id VARCHAR(255), "
+                    + "simulation_name VARCHAR(255), "
                     + "application VARCHAR(255), "
                     + "username VARCHAR(255), "
                     + "launched TIMESTAMP, "
                     + "finish_time TIMESTAMP, "
                     + "status VARCHAR(50), "
                     + "minor_status VARCHAR(100), "
-                    + "moteur_id INTEGER, "
-                    + "moteur_key INTEGER, "
                     + "finish_time TIMESTAMP, "
                     + "PRIMARY KEY (id)"
                     + ")");
@@ -116,6 +115,13 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
                     + "ON Workflows(username)");
         } catch (SQLException ex) {
             logger.print("[WorkflowListener] Table Workflows already exists!");
+            try {
+                Statement stat = connection.createStatement();
+                stat.executeUpdate("ALTER TABLE Workflows ADD COLUMN simulation_name VARCHAR(255)");
+
+            } catch (SQLException ex1) {
+                //TODO
+            }
         }
 
         try {
@@ -125,7 +131,7 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
                     + "path VARCHAR(255), "
                     + "processor VARCHAR(255), "
                     + "type VARCHAR(20), "
-                    + "PRIMARY KEY (workflow_id, path), "
+                    + "PRIMARY KEY (workflow_id, processor, path), "
                     + "FOREIGN KEY(workflow_id) REFERENCES Workflows(id)"
                     + ")");
         } catch (SQLException ex) {
@@ -148,7 +154,7 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
                     + "path VARCHAR(255), "
                     + "processor VARCHAR(255), "
                     + "type VARCHAR(20), "
-                    + "PRIMARY KEY (workflow_id, path), "
+                    + "PRIMARY KEY (workflow_id, processor, path), "
                     + "FOREIGN KEY(workflow_id) REFERENCES Workflows(id)"
                     + ")");
         } catch (SQLException ex) {
@@ -195,6 +201,8 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
         } catch (DAOException ex) {
             if (!ex.getMessage().contains("duplicate key value")) {
                 throw ex;
+            } else {
+                update(workflow);
             }
         } catch (SQLException ex) {
             throw new DAOException(ex.getMessage());
