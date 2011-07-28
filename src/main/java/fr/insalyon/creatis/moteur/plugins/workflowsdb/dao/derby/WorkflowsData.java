@@ -217,17 +217,13 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
         try {
             PreparedStatement ps = prepareStatement("UPDATE "
                     + "Workflows "
-                    + "SET application=?, username=?, launched=?, "
-                    + "finish_time=?, status=?, minor_status=? "
+                    + "SET finish_time=?, status=?, minor_status=? "
                     + "WHERE id=?");
 
-            ps.setString(1, workflow.getApplication());
-            ps.setString(2, workflow.getUser());
-            ps.setTimestamp(3, new Timestamp(workflow.getStartTime().getTime()));
-            ps.setTimestamp(4, new Timestamp(workflow.getFinishTime().getTime()));
-            ps.setString(5, workflow.getMajorStatus());
-            ps.setString(6, workflow.getMinorStatus());
-            ps.setString(7, workflow.getId());
+            ps.setTimestamp(1, new Timestamp(workflow.getFinishTime().getTime()));
+            ps.setString(2, workflow.getMajorStatus());
+            ps.setString(3, workflow.getMinorStatus());
+            ps.setString(4, workflow.getId());
 
             executeUpdate(ps);
 
