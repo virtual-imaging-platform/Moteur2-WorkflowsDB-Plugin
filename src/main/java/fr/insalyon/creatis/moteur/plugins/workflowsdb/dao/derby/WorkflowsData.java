@@ -184,8 +184,8 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
         try {
             PreparedStatement ps = prepareStatement(
                     "INSERT INTO Workflows(id, application, username, launched, "
-                    + "status, minor_status, moteur_id, moteur_key) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                    + "status, minor_status) "
+                    + "VALUES (?, ?, ?, ?, ?, ?)");
 
             ps.setString(1, workflow.getId());
             ps.setString(2, workflow.getApplication());
@@ -193,8 +193,6 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
             ps.setTimestamp(4, new Timestamp(workflow.getStartTime().getTime()));
             ps.setString(5, workflow.getMajorStatus());
             ps.setString(6, workflow.getMinorStatus());
-            ps.setInt(7, workflow.getMoteurID());
-            ps.setInt(8, workflow.getMoteurKey());
 
             execute(ps);
 
