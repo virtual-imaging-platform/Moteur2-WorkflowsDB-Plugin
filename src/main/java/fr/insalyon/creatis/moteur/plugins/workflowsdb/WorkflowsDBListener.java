@@ -146,7 +146,7 @@ public class WorkflowsDBListener implements WorkflowListener {
                             processor.getName(), type);
                     logger.print("[WorkflowListener] Added output '" + path + "'");
 
-            } else if (processor.isInput() && hasValidData(path)) {
+            } else if (processor.isInput() && hasValidData(path) && !processor.isConstant()) {
 
                 String type = "String";
 
