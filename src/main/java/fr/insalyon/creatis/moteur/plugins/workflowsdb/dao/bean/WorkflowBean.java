@@ -1,8 +1,8 @@
- /* Copyright CNRS-I3S
+/* Copyright CNRS-CREATIS
  *
- * Johan Montagnat
- * johan@i3s.unice.fr
- * http://www.i3s.unice.fr/~johan
+ * Rafael Silva
+ * rafael.silva@creatis.insa-lyon.fr
+ * http://www.rafaelsilva.com
  *
  * This software is a grid-enabled data-driven workflow manager and editor.
  *
@@ -47,20 +47,14 @@ public class WorkflowBean {
     private String user;
     private Date startTime;
     private Date finishTime;
-    private String majorStatus;
-    private String minorStatus;
-    private int moteurID;
-    private int moteurKey;
+    private String status;
 
-    public WorkflowBean(String id, String application, String user, Date startTime, String majorStatus, String minorStatus, int moteurID, int moteurKey) {
+    public WorkflowBean(String id, String application, String user, Date startTime, String status) {
         this.id = id;
         this.application = application;
         this.user = user;
         this.startTime = startTime;
-        this.majorStatus = majorStatus;
-        this.minorStatus = minorStatus;
-        this.moteurID = moteurID;
-        this.moteurKey = moteurKey;
+        this.status = status;
         this.finishTime = new Date();
     }
 
@@ -81,31 +75,15 @@ public class WorkflowBean {
     }
 
     public String getMajorStatus() {
-        return majorStatus;
-    }
-
-    public String getMinorStatus() {
-        return minorStatus;
+        return status;
     }
 
     public String getUser() {
         return user;
     }
 
-    public int getMoteurID() {
-        return moteurID;
-    }
-
-    public int getMoteurKey() {
-        return moteurKey;
-    }
-
     public void setMajorStatus(String majorStatus) {
-        this.majorStatus = majorStatus;
-    }
-
-    public void setMinorStatus(String minorStatus) {
-        this.minorStatus = minorStatus;
+        this.status = majorStatus;
     }
 
     public void setFinishTime(Date finishTime) {

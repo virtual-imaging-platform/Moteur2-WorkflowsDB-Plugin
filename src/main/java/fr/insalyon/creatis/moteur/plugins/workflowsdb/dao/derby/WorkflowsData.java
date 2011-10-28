@@ -36,12 +36,15 @@ package fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.derby;
 
 import fr.cnrs.i3s.moteur2.log.Log;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.Configuration;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.WorkflowsDBListener;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.AbstractData;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.WorkflowsDAO;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.bean.ProcessorBean;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.bean.WorkflowBean;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
@@ -75,7 +78,7 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
             createTables();
 
         } catch (SQLException ex) {
-            logger.warning("[WorkflowListener] " + ex.getMessage());
+            logger.warning(WorkflowsDBListener.TAG + ex.getMessage());
         }
     }
 
@@ -92,7 +95,7 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
             connection.setAutoCommit(true);
 
         } catch (ClassNotFoundException ex) {
-            logger.warning("[WorkflowListener] " + ex.getMessage());
+            logger.warning(WorkflowsDBListener.TAG + ex.getMessage());
         }
     }
 
@@ -108,19 +111,13 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
                     + "finish_time TIMESTAMP, "
                     + "status VARCHAR(50), "
                     + "minor_status VARCHAR(100), "
-                    + "finish_time TIMESTAMP, "
                     + "PRIMARY KEY (id)"
                     + ")");
             stat.executeUpdate("CREATE INDEX username_workflow_idx "
                     + "ON Workflows(username)");
         } catch (SQLException ex) {
-            logger.print("[WorkflowListener] Table Workflows already exists!");
-            try {
-                Statement stat = connection.createStatement();
-                stat.executeUpdate("ALTER TABLE Workflows ADD COLUMN simulation_name VARCHAR(255)");
-
-            } catch (SQLException ex1) {
-                //TODO
+            if (!ex.getMessage().contains("Table/View 'WORKFLOWS' already exists")) {
+                logger.print(WorkflowsDBListener.TAG + ex.getMessage());
             }
         }
 
@@ -132,18 +129,12 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
                     + "processor VARCHAR(255), "
                     + "type VARCHAR(20), "
                     + "PRIMARY KEY (workflow_id, processor, path), "
-                    + "FOREIGN KEY(workflow_id) REFERENCES Workflows(id)"
+                    + "FOREIGN KEY(workflow_id) REFERENCES Workflows(id) "
+                    + "ON DELETE CASCADE"
                     + ")");
         } catch (SQLException ex) {
-            logger.print("[WorkflowListener] Table Outputs already exists.");
-
-            try {
-                Statement stat = connection.createStatement();
-                stat.executeUpdate("ALTER TABLE Outputs ADD COLUMN type VARCHAR(20)");
-                stat.executeUpdate("ALTER TABLE Outputs ADD COLUMN processor VARCHAR(255)");
-
-            } catch (SQLException ex1) {
-                //TODO
+            if (!ex.getMessage().contains("Table/View 'OUTPUTS' already exists")) {
+                logger.print(WorkflowsDBListener.TAG + ex.getMessage());
             }
         }
 
@@ -155,10 +146,31 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
                     + "processor VARCHAR(255), "
                     + "type VARCHAR(20), "
                     + "PRIMARY KEY (workflow_id, processor, path), "
-                    + "FOREIGN KEY(workflow_id) REFERENCES Workflows(id)"
+                    + "FOREIGN KEY(workflow_id) REFERENCES Workflows(id) "
+                    + "ON DELETE CASCADE"
                     + ")");
         } catch (SQLException ex) {
-            logger.print("[WorkflowListener] Table Inputs already exists.");
+            if (!ex.getMessage().contains("Table/View 'INPUTS' already exists")) {
+                logger.print(WorkflowsDBListener.TAG + ex.getMessage());
+            }
+        }
+
+        try {
+            Statement stat = connection.createStatement();
+            stat.executeUpdate("CREATE TABLE Processors ("
+                    + "workflow_id VARCHAR(255), "
+                    + "processor VARCHAR(255), "
+                    + "completed INTEGER, "
+                    + "queued INTEGER, "
+                    + "failed INTEGER, "
+                    + "PRIMARY KEY (workflow_id, processor), "
+                    + "FOREIGN KEY(workflow_id) REFERENCES Workflows(id) "
+                    + "ON DELETE CASCADE"
+                    + ")");
+        } catch (SQLException ex) {
+            if (!ex.getMessage().contains("Table/View 'PROCESSORS' already exists")) {
+                logger.print(WorkflowsDBListener.TAG + ex.getMessage());
+            }
         }
     }
 
@@ -170,7 +182,24 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
         try {
             connection.close();
         } catch (SQLException ex) {
-            logger.warning("[WorkflowListener] " + ex.getMessage());
+            logger.warning(WorkflowsDBListener.TAG + ex.getMessage());
+        }
+    }
+
+    @Override
+    public synchronized boolean exists(String workflowID) throws DAOException {
+        try {
+            PreparedStatement ps = prepareStatement(
+                    "SELECT id FROM Workflows WHERE id = ?");
+
+            ps.setString(1, workflowID);
+
+            ResultSet rs = ps.executeQuery();
+
+            return rs.next();
+
+        } catch (SQLException ex) {
+            throw new DAOException(ex.getMessage());
         }
     }
 
@@ -184,24 +213,17 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
         try {
             PreparedStatement ps = prepareStatement(
                     "INSERT INTO Workflows(id, application, username, launched, "
-                    + "status, minor_status) "
-                    + "VALUES (?, ?, ?, ?, ?, ?)");
+                    + "status) "
+                    + "VALUES (?, ?, ?, ?, ?)");
 
             ps.setString(1, workflow.getId());
             ps.setString(2, workflow.getApplication());
             ps.setString(3, workflow.getUser());
             ps.setTimestamp(4, new Timestamp(workflow.getStartTime().getTime()));
             ps.setString(5, workflow.getMajorStatus());
-            ps.setString(6, workflow.getMinorStatus());
 
             execute(ps);
 
-        } catch (DAOException ex) {
-            if (!ex.getMessage().contains("duplicate key value")) {
-                throw ex;
-            } else {
-                update(workflow);
-            }
         } catch (SQLException ex) {
             throw new DAOException(ex.getMessage());
         }
@@ -217,13 +239,12 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
         try {
             PreparedStatement ps = prepareStatement("UPDATE "
                     + "Workflows "
-                    + "SET finish_time=?, status=?, minor_status=? "
+                    + "SET finish_time=?, status=? "
                     + "WHERE id=?");
 
             ps.setTimestamp(1, new Timestamp(workflow.getFinishTime().getTime()));
             ps.setString(2, workflow.getMajorStatus());
-            ps.setString(3, workflow.getMinorStatus());
-            ps.setString(4, workflow.getId());
+            ps.setString(3, workflow.getId());
 
             executeUpdate(ps);
 
@@ -263,7 +284,7 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
             throw new DAOException(ex.getMessage());
         }
     }
-    
+
     /**
      * 
      * @param workflowID Workflow identification
@@ -291,6 +312,97 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
             if (!ex.getMessage().contains("duplicate key value")) {
                 throw ex;
             }
+        } catch (SQLException ex) {
+            throw new DAOException(ex.getMessage());
+        }
+    }
+
+    /**
+     * 
+     * @param workflowID
+     * @param name
+     * @return
+     * @throws DAOException 
+     */
+    @Override
+    public ProcessorBean getProcessor(String workflowID, String name) throws DAOException {
+
+        try {
+            PreparedStatement ps = prepareStatement(
+                    "SELECT workflow_id, processor, completed, queued, failed "
+                    + "FROM Processors WHERE workflow_id = ? AND processor = ?");
+
+            ps.setString(1, workflowID);
+            ps.setString(2, name);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return new ProcessorBean(
+                        rs.getString("workflow_id"),
+                        rs.getString("processor"),
+                        rs.getInt("completed"),
+                        rs.getInt("queued"),
+                        rs.getInt("failed"));
+
+            } else {
+                throw new DAOException("No data");
+            }
+
+        } catch (SQLException ex) {
+            throw new DAOException(ex.getMessage());
+        }
+    }
+
+    /**
+     * 
+     * @param processorBean
+     * @throws DAOException 
+     */
+    @Override
+    public void addProcessor(ProcessorBean processorBean) throws DAOException {
+        
+        try {
+            PreparedStatement ps = prepareStatement(
+                    "INSERT INTO Processors"
+                    + "(workflow_id, processor, completed, queued, failed) "
+                    + "VALUES (?, ?, ?, ?, ?)");
+
+            ps.setString(1, processorBean.getWorkflowID());
+            ps.setString(2, processorBean.getName());
+            ps.setInt(3, processorBean.getCompleted());
+            ps.setInt(4, processorBean.getQueued());
+            ps.setInt(5, processorBean.getFailed());
+
+            execute(ps);
+
+        } catch (SQLException ex) {
+            throw new DAOException(ex.getMessage());
+        }
+    }
+
+    /**
+     * 
+     * @param processorBean
+     * @throws DAOException 
+     */
+    @Override
+    public void updateProcessor(ProcessorBean processorBean) throws DAOException {
+        
+        try {
+            PreparedStatement ps = prepareStatement(
+                    "UPDATE Processors SET "
+                    + "completed = ?, queued = ?, failed = ? "
+                    + "WHERE workflow_id = ? AND processor = ?");
+
+            ps.setInt(1, processorBean.getCompleted());
+            ps.setInt(2, processorBean.getQueued());
+            ps.setInt(3, processorBean.getFailed());
+            ps.setString(4, processorBean.getWorkflowID());
+            ps.setString(5, processorBean.getName());
+
+            executeUpdate(ps);
+
         } catch (SQLException ex) {
             throw new DAOException(ex.getMessage());
         }

@@ -32,34 +32,53 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-package fr.insalyon.creatis.moteur.plugins.workflowsdb.dao;
-
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.bean.ProcessorBean;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.bean.WorkflowBean;
+package fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.bean;
 
 /**
  *
  * @author Rafael Silva
  */
-public interface WorkflowsDAO {
+public class ProcessorBean {
 
-    public boolean exists(String workflowID) throws DAOException;
+    private String workflowID;
+    private String name;
+    private int completed;
+    private int queued;
+    private int failed;
 
-    public void add(WorkflowBean workflow) throws DAOException;
+    public ProcessorBean(String workflowID, String name, int completed,
+            int queued, int failed) {
 
-    public void update(WorkflowBean workflow) throws DAOException;
+        this.workflowID = workflowID;
+        this.name = name;
+        this.completed = completed;
+        this.queued = queued;
+        this.failed = failed;
+    }
 
-    public void addOutput(String workflowID, String path,
-            String processor, String type) throws DAOException;
+    public int getCompleted() {
+        return completed;
+    }
 
-    public void addInput(String workflowID, String path, String processor, String type) throws DAOException;
+    public int getFailed() {
+        return failed;
+    }
 
-    public ProcessorBean getProcessor(String workflowID, String name) throws DAOException;
-    
-    public void addProcessor(ProcessorBean processorBean) throws DAOException;
-    
-    public void updateProcessor(ProcessorBean processorBean) throws DAOException;
+    public String getName() {
+        return name;
+    }
 
-    public void close();
+    public int getQueued() {
+        return queued;
+    }
+
+    public String getWorkflowID() {
+        return workflowID;
+    }
+
+    public void update(int completed, int queued, int failed) {
+        this.completed = completed;
+        this.queued = queued;
+        this.failed = failed;
+    }
 }
