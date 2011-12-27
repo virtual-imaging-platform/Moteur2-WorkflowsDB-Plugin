@@ -39,6 +39,7 @@ import fr.cnrs.i3s.moteur2.execution.WorkflowListener;
 import fr.cnrs.i3s.moteur2.plugins.ListenerFactoryInterface;
 import fr.cnrs.i3s.moteur2.plugins.MoteurPlugins;
 import fr.cnrs.i3s.moteur2.plugins.PluginException;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.Configuration.Factory;
 import java.util.HashMap;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
 
@@ -52,12 +53,22 @@ public class WorkflowsDBListenerFactory implements ListenerFactoryInterface {
     public WorkflowsDBListenerFactory() {
 
         HashMap<String, String> parameters = MoteurPlugins.getPluginDescriptor(this).getParameters();
+
+        String factory = parameters.get("factory");
         String host = parameters.get("host");
         String port = parameters.get("port");
         String path = parameters.get("path");
+        String dbName = parameters.get("db_name");
+        String dbUser = parameters.get("db_user");
+        String dbPassword = parameters.get("db_password");
+
+        Configuration.FACTORY = factory != null ? Factory.valueOf(factory.toUpperCase()) : Factory.DERBY;
         Configuration.HOST = host != null ? host : "localhost";
         Configuration.PORT = port != null ? new Integer(port) : 1527;
         Configuration.DB_PATH = path != null ? path : "/var/www/workflows-db";
+        Configuration.DB_NAME = dbName != null ? dbName : "database-name";
+        Configuration.DB_USER = dbUser != null ? dbUser : "mysql-user";
+        Configuration.DB_PASSWORD = dbPassword != null ? dbPassword : "secret";
     }
 
     @Override

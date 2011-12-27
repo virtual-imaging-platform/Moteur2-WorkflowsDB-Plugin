@@ -40,7 +40,15 @@ package fr.insalyon.creatis.moteur.plugins.workflowsdb;
  */
 public class Configuration {
 
+    public static enum Factory {
+
+        DERBY, MYSQL
+    };
+    public static Factory FACTORY;
     public static String HOST;
     public static int PORT;
     public static String DB_PATH;
+    public static String DB_NAME;
+    public static String DB_USER;
+    public static String DB_PASSWORD;
 }

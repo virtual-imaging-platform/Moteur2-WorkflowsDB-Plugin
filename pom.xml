@@ -3,10 +3,10 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>fr.insalyon.creatis</groupId>
-    <artifactId>moteur-workflowsdb-plugin</artifactId>
+    <artifactId>moteur2-workflowsdb-plugin</artifactId>
     <packaging>jar</packaging>
-    <version>0.5</version>
-    <name>Moteur-WorkflowsDB-Plugin</name>
+    <version>0.6</version>
+    <name>Moteur2-WorkflowsDB-Plugin</name>
     <build>
         <plugins>
             <plugin>
@@ -39,30 +39,54 @@
             </plugin>
         </plugins>
     </build>
+    
     <dependencies>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>3.8.1</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>fr.cnrs.i3s</groupId>
             <artifactId>moteur2-common</artifactId>
-            <version>0.9.15-SNAPSHOT</version>
+            <version>0.9.19</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>
             <version>10.6.1.0</version>
         </dependency>
+
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derbyclient</artifactId>
             <version>10.6.1.0</version>
         </dependency>
+        
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.18</version>
+        </dependency>
+
     </dependencies>
+    
+    <repositories>
+        <repository>
+            <id>thirdparty</id>
+            <url>http://vip.creatis.insa-lyon.fr:9007/nexus/content/repositories/thirdparty</url>
+        </repository>
+        <repository>
+            <id>i3s-releases</id>
+            <url>http://nyx.unice.fr:9007/nexus/content/repositories/releases/</url>
+        </repository>
+    </repositories>
+    
     <distributionManagement>
         <repository>
             <id>releases</id>

@@ -32,26 +32,27 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-package fr.insalyon.creatis.moteur.plugins.workflowsdb.dao;
+package fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.mysql;
 
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.derby.WorkflowsData;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.DAOFactory;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.WorkflowsDAO;
 
 /**
  *
- * @author Rafael Silva
+ * @author Mark Santcroos
  */
-public class DerbyDAOFactory extends DAOFactory {
+public class MySQLDAOFactory extends DAOFactory {
 
-    public static DerbyDAOFactory instance;
+    public static MySQLDAOFactory instance;
 
-    public static DerbyDAOFactory getInstance() {
+    public static MySQLDAOFactory getInstance() {
         if (instance == null) {
-            instance = new DerbyDAOFactory();
+            instance = new MySQLDAOFactory();
         }
         return instance;
     }
 
-    private DerbyDAOFactory() {
+    private MySQLDAOFactory() {
     }
 
     @Override
