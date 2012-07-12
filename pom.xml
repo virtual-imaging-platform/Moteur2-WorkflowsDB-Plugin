@@ -1,12 +1,12 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>fr.insalyon.creatis</groupId>
     <artifactId>moteur2-workflowsdb-plugin</artifactId>
     <packaging>jar</packaging>
-    <version>0.6</version>
-    <name>Moteur2-WorkflowsDB-Plugin</name>
+    <version>0.6-SNAPSHOT</version>
+    <name>Moteur :: WorkflowsDB Plugin</name>
     <build>
         <plugins>
             <plugin>
@@ -21,14 +21,15 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <appendAssemblyId>false</appendAssemblyId>
-                </configuration>
+                <version>2.2.1</version>
                 <executions>
                     <execution>
+                        <configuration>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <appendAssemblyId>false</appendAssemblyId>
+                        </configuration>                
                         <id>make-assembly</id>
                         <phase>package</phase>
                         <goals>
@@ -37,45 +38,47 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-scm-plugin</artifactId>
+                <version>1.6</version>
+                <configuration>
+                    <connectionType>developerConnection</connectionType>
+                </configuration>
+            </plugin>            
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.3</version>
+                <configuration>
+                    <tagBase>svn+ssh://svn.creatis.insa-lyon.fr/Moteur2-WorkflowsDB-Plugin/tags</tagBase>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
-    
     <dependencies>
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-            <scope>test</scope>
-        </dependency>
-
         <dependency>
             <groupId>fr.cnrs.i3s</groupId>
             <artifactId>moteur2-common</artifactId>
-            <version>0.9.19</version>
+            <version>0.9.20</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>
             <version>10.6.1.0</version>
         </dependency>
-
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derbyclient</artifactId>
             <version>10.6.1.0</version>
-        </dependency>
-        
+        </dependency>        
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.18</version>
         </dependency>
-
-    </dependencies>
-    
+    </dependencies>    
     <repositories>
         <repository>
             <id>thirdparty</id>
@@ -86,7 +89,11 @@
             <url>http://nyx.unice.fr:9007/nexus/content/repositories/releases/</url>
         </repository>
     </repositories>
-    
+    <scm>
+        <connection>scm:svn:svn+ssh://svn.creatis.insa-lyon.fr/Moteur2-WorkflowsDB-Plugin/trunk</connection>
+        <developerConnection>scm:svn:svn+ssh://svn.creatis.insa-lyon.fr/Moteur2-WorkflowsDB-Plugin/trunk</developerConnection>
+        <url>svn+ssh://svn.creatis.insa-lyon.fr/Moteur2-WorkflowsDB-Plugin</url>
+    </scm>
     <distributionManagement>
         <repository>
             <id>releases</id>
@@ -97,5 +104,5 @@
             <name>Internal Snapshots</name>
             <url>http://vip.creatis.insa-lyon.fr:9007/nexus/content/repositories/snapshots</url>
         </snapshotRepository>
-    </distributionManagement>
+    </distributionManagement> 
 </project>
