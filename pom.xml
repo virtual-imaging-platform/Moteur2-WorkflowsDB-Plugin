@@ -1,11 +1,10 @@
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>fr.insalyon.creatis</groupId>
     <artifactId>moteur2-workflowsdb-plugin</artifactId>
     <packaging>jar</packaging>
-    <version>0.6-SNAPSHOT</version>
+    <version>0.6</version>
     <name>Moteur :: WorkflowsDB Plugin</name>
     <build>
         <plugins>
@@ -90,9 +89,9 @@
         </repository>
     </repositories>
     <scm>
-        <connection>scm:svn:svn+ssh://svn.creatis.insa-lyon.fr/Moteur2-WorkflowsDB-Plugin/trunk</connection>
-        <developerConnection>scm:svn:svn+ssh://svn.creatis.insa-lyon.fr/Moteur2-WorkflowsDB-Plugin/trunk</developerConnection>
-        <url>svn+ssh://svn.creatis.insa-lyon.fr/Moteur2-WorkflowsDB-Plugin</url>
+        <connection>scm:svn:svn+ssh://svn.creatis.insa-lyon.fr/Moteur2-WorkflowsDB-Plugin/tags/moteur2-workflowsdb-plugin-0.6</connection>
+        <developerConnection>scm:svn:svn+ssh://svn.creatis.insa-lyon.fr/Moteur2-WorkflowsDB-Plugin/tags/moteur2-workflowsdb-plugin-0.6</developerConnection>
+        <url>scm:svn:svn+ssh://svn.creatis.insa-lyon.fr/Moteur2-WorkflowsDB-Plugin/tags/moteur2-workflowsdb-plugin-0.6</url>
     </scm>
     <distributionManagement>
         <repository>
