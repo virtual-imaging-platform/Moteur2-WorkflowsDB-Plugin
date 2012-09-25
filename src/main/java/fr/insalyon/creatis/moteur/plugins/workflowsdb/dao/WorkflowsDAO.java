@@ -34,8 +34,8 @@
  */
 package fr.insalyon.creatis.moteur.plugins.workflowsdb.dao;
 
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.Status;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.bean.ProcessorBean;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.bean.WorkflowBean;
 
 /**
@@ -44,22 +44,32 @@ import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.bean.WorkflowBean;
  */
 public interface WorkflowsDAO {
 
-    public boolean exists(String workflowID) throws DAOException;
+    public boolean exists(String workflowID)
+            throws fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException;
 
-    public void add(WorkflowBean workflow) throws DAOException;
+    public void add(WorkflowBean workflow)
+            throws fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException;
 
-    public void update(WorkflowBean workflow) throws DAOException;
+    public void update(WorkflowBean workflow)
+            throws fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException;
 
-    public void addOutput(String workflowID, String path,
-            String processor, String type) throws DAOException;
+    public void updateStatus(String workflowID, Status status)
+            throws fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException;
 
-    public void addInput(String workflowID, String path, String processor, String type) throws DAOException;
+    public void addOutput(String workflowID, String path, String processor, String type)
+            throws fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException;
 
-    public ProcessorBean getProcessor(String workflowID, String name) throws DAOException;
-    
-    public void addProcessor(ProcessorBean processorBean) throws DAOException;
-    
-    public void updateProcessor(ProcessorBean processorBean) throws DAOException;
+    public void addInput(String workflowID, String path, String processor, String type)
+            throws fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException;
+
+    public ProcessorBean getProcessor(String workflowID, String name)
+            throws fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException;
+
+    public void addProcessor(ProcessorBean processorBean)
+            throws fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException;
+
+    public void updateProcessor(ProcessorBean processorBean)
+            throws fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException;
 
     public void close();
 }

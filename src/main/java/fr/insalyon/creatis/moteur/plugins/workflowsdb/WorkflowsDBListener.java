@@ -46,15 +46,12 @@ import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.DAOFactory;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.WorkflowsDAO;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.bean.ProcessorBean;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.bean.WorkflowBean;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -65,11 +62,6 @@ import java.util.HashMap;
 public class WorkflowsDBListener implements WorkflowListener {
 
     public static final String TAG = "[WorkflowsDB Plugin] ";
-
-    private enum Status {
-
-        Completed, Running, Killed
-    };
     private static Log logger = new Log();
     private WorkflowsDAO workflowDAO;
     private WorkflowBean workflowBean;
@@ -77,52 +69,68 @@ public class WorkflowsDBListener implements WorkflowListener {
     public WorkflowsDBListener(Workflow workflow) {
 
         try {
+
             workflowDAO = DAOFactory.getDAOFactory().getWorkflowDAO();
             String path = new File("").getAbsolutePath();
-            String workflowPath = path.substring(path.lastIndexOf("/") + 1, path.length());
+            String workflowID = path.substring(path.lastIndexOf("/") + 1, path.length());
+            String user = "Default User";
+            workflowBean = new WorkflowBean(workflowID, workflow.getName(), user,
+                    new Date(), Status.Queued.name());
+            if (!workflowDAO.exists(workflowID)) {
 
-            if (!workflowDAO.exists(TAG)) {
-                BufferedReader br = new BufferedReader(new InputStreamReader(
-                        new DataInputStream(new FileInputStream("user.txt"))));
-                String line = br.readLine().split("/")[5];
-                String user = line.substring(line.lastIndexOf("=") + 1);
+                File userFile = new File("user.txt");
+                if (userFile.exists()) {
 
-                br.close();
+                    BufferedReader br = new BufferedReader(
+                            new InputStreamReader(
+                            new DataInputStream(
+                            new FileInputStream(userFile))));
+                    String line = br.readLine().split("/")[5];
+                    user = line.substring(line.lastIndexOf("=") + 1);
+                    br.close();
+                }
 
-                workflowBean = new WorkflowBean(workflowPath, workflow.getName(), user,
-                        new Date(), Status.Running.name());
                 workflowDAO.add(workflowBean);
+            } else {
+                logger.warning(TAG + "workflow " + workflowID + " exists IGNORING it!");
             }
 
-        } catch (IOException ex) {
+        } catch (java.io.IOException ex) {
             logger.warning(TAG + ex.getMessage());
-        } catch (DAOException ex) {
-            if (!ex.getMessage().contains("duplicate key value")) {
-                logger.warning(TAG + ex.getMessage());
-            }
+        } catch (fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException ex) {
+            logger.warning(TAG + ex.getMessage());
         }
     }
 
     @Override
     public void executionStarted(Workflow workflow, int id, int key) {
+
+        try {
+
+            logger.print(TAG + "now workflow execution status is running!");
+            workflowDAO.updateStatus(workflowBean.getId(), Status.Running);
+        } catch (fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException ex) {
+            logger.warning(TAG + ex.getMessage());
+        }
     }
 
     @Override
     public void executionCompleted(Workflow workflow, boolean completed) {
 
         try {
+
             if (completed) {
                 workflowBean.setMajorStatus(Status.Completed.name());
             } else {
                 workflowBean.setMajorStatus(Status.Killed.name());
             }
+
             workflowBean.setFinishTime(new Date());
             workflowDAO.update(workflowBean);
-
-        } catch (DAOException ex) {
+        } catch (fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException ex) {
             logger.warning(TAG + ex.getMessage());
         }
-        workflowDAO.close();
+        //workflowDAO.close();
     }
 
     @Override
@@ -145,38 +153,36 @@ public class WorkflowsDBListener implements WorkflowListener {
     public void processorReceived(Workflow workflow, Processor processor, String port, DataItem item) {
 
         try {
-            String path = item.dataString();
 
+            String path = item.dataString();
             if (processor.isOutput() && hasValidData(path)) {
 
                 String type = "String";
-
                 if (path.startsWith("lfn://")) {
+
                     path = new URI(item.dataString().toString()).getPath();
                     type = "URI";
                 }
 
                 workflowDAO.addOutput(workflowBean.getId(), path, processor.getName(), type);
                 logger.print(TAG + "Added output '" + path + "'");
-
             } else if (processor.isInput() && !processor.isConstant() && hasValidData(path)) {
 
                 String type = "String";
-
                 if (path.startsWith("lfn://")) {
+
                     path = new URI(item.dataString().toString()).getPath();
                     type = "URI";
                 }
 
                 workflowDAO.addInput(workflowBean.getId(), path, processor.getName(), type);
                 logger.print(TAG + "Added input '" + path + "'");
-
             }
-            updateProcessor(processor);
 
-        } catch (URISyntaxException ex) {
+            updateProcessor(processor);
+        } catch (java.net.URISyntaxException ex) {
             logger.warning(TAG + ex.getMessage());
-        } catch (DAOException ex) {
+        } catch (fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException ex) {
             if (!ex.getMessage().contains("duplicate key value")) {
                 logger.warning(TAG + ex.getMessage());
             }
@@ -192,18 +198,17 @@ public class WorkflowsDBListener implements WorkflowListener {
 
         if (!processor.isInput() && !processor.isOutput() && !processor.isConstant() && !processor.isBoring()) {
             try {
+
                 ProcessorBean pb = workflowDAO.getProcessor(workflowBean.getId(), processor.getName());
                 pb.update(processor.getNRuns(), processor.getNpending(), processor.getNFailures());
                 workflowDAO.updateProcessor(pb);
-
-            } catch (DAOException ex) {
+            } catch (fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException ex) {
                 if (ex.getMessage().toLowerCase().contains("no data")) {
                     try {
                         workflowDAO.addProcessor(
                                 new ProcessorBean(workflowBean.getId(), processor.getName(),
                                 processor.getNRuns(), processor.getNpending(), processor.getNFailures()));
-
-                    } catch (DAOException ex1) {
+                    } catch (fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException ex1) {
                         logger.warning(TAG + ex1.getMessage());
                     }
                 } else {

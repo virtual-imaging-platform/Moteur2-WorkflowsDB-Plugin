@@ -36,6 +36,7 @@ package fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.mysql;
 
 import fr.cnrs.i3s.moteur2.log.Log;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.Configuration;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.Status;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.WorkflowsDBListener;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.AbstractData;
 import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.WorkflowsDAO;
@@ -62,6 +63,7 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
 
     /**
      * Gets an unique instance of the class WorkflowData
+     *
      * @return Unique instance of WorkflowData
      */
     public synchronized static WorkflowsData getInstance() {
@@ -189,6 +191,7 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
 
     /**
      * Add a new workflow to the database
+     *
      * @param workflow Workflow bean
      * @throws DAOException
      */
@@ -221,6 +224,7 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
 
     /**
      * Update a workflow at the database
+     *
      * @param workflow Workflow bean
      * @throws DAOException
      */
@@ -243,8 +247,26 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
         }
     }
 
+    @Override
+    public void updateStatus(String workflowID, Status status) throws DAOException {
+        try {
+            PreparedStatement ps = prepareStatement("UPDATE Workflows "
+                    + "SET status=? "
+                    + "WHERE id=?");
+
+
+            ps.setString(1, status.name());
+            ps.setString(2, workflowID);
+
+            executeUpdate(ps);
+
+        } catch (SQLException ex) {
+            throw new DAOException(ex.getMessage());
+        }
+    }
+
     /**
-     * 
+     *
      * @param workflowID Workflow identification
      * @param path
      * @param processor
@@ -277,7 +299,7 @@ public class WorkflowsData extends AbstractData implements WorkflowsDAO {
     }
 
     /**
-     * 
+     *
      * @param workflowID Workflow identification
      * @param path
      * @param processor
