@@ -4,7 +4,7 @@
     <groupId>fr.insalyon.creatis</groupId>
     <artifactId>moteur2-workflowsdb-plugin</artifactId>
     <packaging>jar</packaging>
-    <version>0.8-SNAPSHOT</version>
+    <version>0.7</version>
     <name>Moteur :: WorkflowsDB Plugin</name>
     <build>
         <plugins>
@@ -78,9 +78,9 @@
         </repository>
     </repositories>
     <scm>
-        <connection>scm:svn:svn+ssh://svn.creatis.insa-lyon.fr/Moteur2-WorkflowsDB-Plugin/trunk</connection>
-        <developerConnection>scm:svn:svn+ssh://svn.creatis.insa-lyon.fr/Moteur2-WorkflowsDB-Plugin/trunk</developerConnection>
-        <url>svn+ssh://svn.creatis.insa-lyon.fr/Moteur2-WorkflowsDB-Plugin</url>
+        <connection>scm:svn:svn+ssh://svn.creatis.insa-lyon.fr/Moteur2-WorkflowsDB-Plugin/tags/moteur2-workflowsdb-plugin-0.7</connection>
+        <developerConnection>scm:svn:svn+ssh://svn.creatis.insa-lyon.fr/Moteur2-WorkflowsDB-Plugin/tags/moteur2-workflowsdb-plugin-0.7</developerConnection>
+        <url>scm:svn:svn+ssh://svn.creatis.insa-lyon.fr/Moteur2-WorkflowsDB-Plugin/tags/moteur2-workflowsdb-plugin-0.7</url>
     </scm>
     <distributionManagement>
         <repository>
