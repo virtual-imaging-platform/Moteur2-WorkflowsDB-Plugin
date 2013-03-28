@@ -1,10 +1,8 @@
 /* Copyright CNRS-CREATIS
  *
- * Rafael Silva
+ * Rafael Ferreira da Silva
  * rafael.silva@creatis.insa-lyon.fr
  * http://www.rafaelsilva.com
- *
- * This software is a grid-enabled data-driven workflow manager and editor.
  *
  * This software is governed by the CeCILL  license under French law and
  * abiding by the rules of distribution of free software.  You can  use,
@@ -37,15 +35,24 @@ package fr.insalyon.creatis.moteur.plugins.workflowsdb;
 import fr.cnrs.i3s.moteur2.data.Data;
 import fr.cnrs.i3s.moteur2.data.DataItem;
 import fr.cnrs.i3s.moteur2.data.DataLine;
-import fr.cnrs.i3s.moteur2.execution.Workflow;
 import fr.cnrs.i3s.moteur2.execution.WorkflowListener;
 import fr.cnrs.i3s.moteur2.log.Log;
 import fr.cnrs.i3s.moteur2.processor.OutputPort;
-import fr.cnrs.i3s.moteur2.processor.Processor;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.DAOFactory;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.WorkflowsDAO;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.bean.ProcessorBean;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.bean.WorkflowBean;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.bean.DataType;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.bean.Input;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.bean.InputID;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.bean.Output;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.bean.OutputID;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.bean.Processor;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.bean.ProcessorID;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.bean.Workflow;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.bean.WorkflowStatus;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.InputDAO;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.OutputDAO;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.ProcessorDAO;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.WorkflowDAO;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.WorkflowsDBDAOException;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.WorkflowsDBDAOFactory;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
@@ -57,27 +64,35 @@ import java.util.HashMap;
 
 /**
  *
- * @author Rafael Silva
+ * @author Rafael Ferreira da Silva
  */
 public class WorkflowsDBListener implements WorkflowListener {
 
     public static final String TAG = "[WorkflowsDB Plugin] ";
     private static Log logger = new Log();
-    private WorkflowsDAO workflowDAO;
-    private WorkflowBean workflowBean;
+    private WorkflowDAO workflowDAO;
+    private ProcessorDAO processorDAO;
+    private OutputDAO outputDAO;
+    private InputDAO inputDAO;
+    private Workflow workflowBean;
 
-    public WorkflowsDBListener(Workflow workflow) {
+    public WorkflowsDBListener(fr.cnrs.i3s.moteur2.execution.Workflow workflow) {
 
         try {
 
-            workflowDAO = DAOFactory.getDAOFactory().getWorkflowDAO();
+            workflowDAO = WorkflowsDBDAOFactory.getInstance().getWorkflowDAO();
+            processorDAO = WorkflowsDBDAOFactory.getInstance().getProcessorDAO();
+            inputDAO = WorkflowsDBDAOFactory.getInstance().getInputDAO();
+            outputDAO = WorkflowsDBDAOFactory.getInstance().getOutputDAO();
+
             String path = new File("").getAbsolutePath();
             String workflowID = path.substring(path.lastIndexOf("/") + 1, path.length());
-            String user = "Default User";
-            workflowBean = new WorkflowBean(workflowID, workflow.getName(), user,
-                    new Date(), Status.Queued.name());
-            if (!workflowDAO.exists(workflowID)) {
 
+            workflowBean = workflowDAO.get(workflowID);
+
+            if (workflowBean == null) {
+
+                String user = "Default User";
                 File userFile = new File("user.txt");
                 if (userFile.exists()) {
 
@@ -89,100 +104,100 @@ public class WorkflowsDBListener implements WorkflowListener {
                     user = line.substring(line.lastIndexOf("=") + 1);
                     br.close();
                 }
-
+                workflowBean = new Workflow(workflowID, user, WorkflowStatus.Queued,
+                        new Date(), null, null, null, null, null);
                 workflowDAO.add(workflowBean);
-            } else {
-                logger.warning(TAG + "workflow " + workflowID + " exists IGNORING it!");
             }
-
         } catch (java.io.IOException ex) {
             logger.warning(TAG + ex.getMessage());
-        } catch (fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException ex) {
+        } catch (WorkflowsDBDAOException ex) {
             logger.warning(TAG + ex.getMessage());
         }
     }
 
     @Override
-    public void executionStarted(Workflow workflow, int id, int key) {
+    public void executionStarted(fr.cnrs.i3s.moteur2.execution.Workflow workflow, int id, int key) {
 
         try {
+            workflowBean.setStatus(WorkflowStatus.Running);
+            workflowDAO.update(workflowBean);
 
-            logger.print(TAG + "now workflow execution status is running!");
-            workflowDAO.updateStatus(workflowBean.getId(), Status.Running);
-        } catch (fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException ex) {
+        } catch (WorkflowsDBDAOException ex) {
             logger.warning(TAG + ex.getMessage());
         }
     }
 
     @Override
-    public void executionCompleted(Workflow workflow, boolean completed) {
+    public void executionCompleted(fr.cnrs.i3s.moteur2.execution.Workflow workflow, boolean completed) {
 
         try {
 
             if (completed) {
-                workflowBean.setMajorStatus(Status.Completed.name());
+                workflowBean.setStatus(WorkflowStatus.Completed);
             } else {
-                workflowBean.setMajorStatus(Status.Killed.name());
+                workflowBean.setStatus(WorkflowStatus.Killed);
             }
-
-            workflowBean.setFinishTime(new Date());
+            workflowBean.setFinishedTime(new Date());
             workflowDAO.update(workflowBean);
-        } catch (fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException ex) {
+
+        } catch (WorkflowsDBDAOException ex) {
             logger.warning(TAG + ex.getMessage());
         }
-        //workflowDAO.close();
     }
 
     @Override
-    public void processorRun(Workflow workflow, Processor processor) {
+    public void processorRun(fr.cnrs.i3s.moteur2.execution.Workflow workflow,
+            fr.cnrs.i3s.moteur2.processor.Processor processor) {
 
         updateProcessor(processor);
     }
 
     @Override
-    public void processorRan(Workflow workflow, Processor processor, int nruns, boolean completed, DataLine line, HashMap<OutputPort, Data> produced) {
+    public void processorRan(fr.cnrs.i3s.moteur2.execution.Workflow workflow,
+            fr.cnrs.i3s.moteur2.processor.Processor processor, int nruns,
+            boolean completed, DataLine line, HashMap<OutputPort, Data> produced) {
 
         updateProcessor(processor);
     }
 
     @Override
-    public void processorFailed(Workflow workflow, Processor processor, int nfailures, boolean completed, String error) {
+    public void processorFailed(fr.cnrs.i3s.moteur2.execution.Workflow workflow,
+            fr.cnrs.i3s.moteur2.processor.Processor processor, int nfailures,
+            boolean completed, String error) {
     }
 
     @Override
-    public void processorReceived(Workflow workflow, Processor processor, String port, DataItem item) {
+    public void processorReceived(fr.cnrs.i3s.moteur2.execution.Workflow workflow,
+            fr.cnrs.i3s.moteur2.processor.Processor processor, String port, DataItem item) {
 
         try {
 
             String path = item.dataString();
             if (processor.isOutput() && hasValidData(path)) {
 
-                String type = "String";
+                DataType type = DataType.String;
                 if (path.startsWith("lfn://")) {
-
                     path = new URI(item.dataString().toString()).getPath();
-                    type = "URI";
+                    type = DataType.URI;
                 }
-
-                workflowDAO.addOutput(workflowBean.getId(), path, processor.getName(), type);
+                outputDAO.add(new Output(new OutputID(workflowBean.getId(), path, processor.getName()), type, port));
                 logger.print(TAG + "Added output '" + path + "'");
+
             } else if (processor.isInput() && !processor.isConstant() && hasValidData(path)) {
 
-                String type = "String";
+                DataType type = DataType.String;
                 if (path.startsWith("lfn://")) {
-
                     path = new URI(item.dataString().toString()).getPath();
-                    type = "URI";
+                    type = DataType.URI;
                 }
-
-                workflowDAO.addInput(workflowBean.getId(), path, processor.getName(), type);
+                inputDAO.add(new Input(new InputID(workflowBean.getId(), path, processor.getName()), type));
                 logger.print(TAG + "Added input '" + path + "'");
             }
-
             updateProcessor(processor);
+
         } catch (java.net.URISyntaxException ex) {
             logger.warning(TAG + ex.getMessage());
-        } catch (fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException ex) {
+        } catch (WorkflowsDBDAOException ex) {
             if (!ex.getMessage().contains("duplicate key value")) {
                 logger.warning(TAG + ex.getMessage());
             }
@@ -194,26 +209,27 @@ public class WorkflowsDBListener implements WorkflowListener {
                 && !path.equals("void") && !path.equals("null");
     }
 
-    private void updateProcessor(Processor processor) {
+    private void updateProcessor(fr.cnrs.i3s.moteur2.processor.Processor processor) {
 
         if (!processor.isInput() && !processor.isOutput() && !processor.isConstant() && !processor.isBoring()) {
             try {
 
-                ProcessorBean pb = workflowDAO.getProcessor(workflowBean.getId(), processor.getName());
-                pb.update(processor.getNRuns(), processor.getNpending(), processor.getNFailures());
-                workflowDAO.updateProcessor(pb);
-            } catch (fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException ex) {
-                if (ex.getMessage().toLowerCase().contains("no data")) {
-                    try {
-                        workflowDAO.addProcessor(
-                                new ProcessorBean(workflowBean.getId(), processor.getName(),
-                                processor.getNRuns(), processor.getNpending(), processor.getNFailures()));
-                    } catch (fr.insalyon.creatis.moteur.plugins.workflowsdb.exceptions.DAOException ex1) {
-                        logger.warning(TAG + ex1.getMessage());
-                    }
+                Processor p = processorDAO.get(workflowBean.getId(), processor.getName());
+
+                if (p != null) {
+                    p.setCompleted(processor.getNRuns());
+                    p.setQueued(processor.getNpending());
+                    p.setFailed(processor.getNFailures());
+                    processorDAO.update(p);
+
                 } else {
-                    logger.warning(TAG + ex.getMessage());
+                    processorDAO.add(new Processor(
+                            new ProcessorID(workflowBean.getId(), processor.getName()),
+                            processor.getNRuns(), processor.getNpending(), processor.getNFailures()));
                 }
+            } catch (WorkflowsDBDAOException ex) {
+                logger.warning(TAG + ex.getMessage());
+
             }
         }
     }
