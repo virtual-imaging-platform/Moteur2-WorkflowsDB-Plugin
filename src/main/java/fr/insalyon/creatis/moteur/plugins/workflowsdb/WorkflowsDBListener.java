@@ -74,7 +74,7 @@ public class WorkflowsDBListener implements WorkflowListener {
     private ProcessorDAO processorDAO;
     private OutputDAO outputDAO;
     private InputDAO inputDAO;
-    private Workflow workflowBean;
+    private String workflowID;
 
     public WorkflowsDBListener(fr.cnrs.i3s.moteur2.execution.Workflow workflow) {
 
@@ -86,9 +86,9 @@ public class WorkflowsDBListener implements WorkflowListener {
             outputDAO = WorkflowsDBDAOFactory.getInstance().getOutputDAO();
 
             String path = new File("").getAbsolutePath();
-            String workflowID = path.substring(path.lastIndexOf("/") + 1, path.length());
+            workflowID = path.substring(path.lastIndexOf("/") + 1, path.length());
 
-            workflowBean = workflowDAO.get(workflowID);
+            Workflow workflowBean = workflowDAO.get(workflowID);
 
             if (workflowBean == null) {
 
@@ -119,6 +119,7 @@ public class WorkflowsDBListener implements WorkflowListener {
     public void executionStarted(fr.cnrs.i3s.moteur2.execution.Workflow workflow, int id, int key) {
 
         try {
+            Workflow workflowBean = workflowDAO.get(workflowID);
             workflowBean.setStatus(WorkflowStatus.Running);
             workflowDAO.update(workflowBean);
 
@@ -131,6 +132,7 @@ public class WorkflowsDBListener implements WorkflowListener {
     public void executionCompleted(fr.cnrs.i3s.moteur2.execution.Workflow workflow, boolean completed) {
 
         try {
+            Workflow workflowBean = workflowDAO.get(workflowID);
 
             if (completed) {
                 workflowBean.setStatus(WorkflowStatus.Completed);
@@ -149,7 +151,12 @@ public class WorkflowsDBListener implements WorkflowListener {
     public void processorRun(fr.cnrs.i3s.moteur2.execution.Workflow workflow,
             fr.cnrs.i3s.moteur2.processor.Processor processor) {
 
-        updateProcessor(processor);
+        try {
+            updateProcessor(processor, workflowDAO.get(workflowID));
+
+        } catch (WorkflowsDBDAOException ex) {
+            logger.warning(TAG + ex.getMessage());
+        }
     }
 
     @Override
@@ -157,7 +164,12 @@ public class WorkflowsDBListener implements WorkflowListener {
             fr.cnrs.i3s.moteur2.processor.Processor processor, int nruns,
             boolean completed, DataLine line, HashMap<OutputPort, Data> produced) {
 
-        updateProcessor(processor);
+        try {
+            updateProcessor(processor, workflowDAO.get(workflowID));
+
+        } catch (WorkflowsDBDAOException ex) {
+            logger.warning(TAG + ex.getMessage());
+        }
     }
 
     @Override
@@ -171,8 +183,9 @@ public class WorkflowsDBListener implements WorkflowListener {
             fr.cnrs.i3s.moteur2.processor.Processor processor, String port, DataItem item) {
 
         try {
-
+            Workflow workflowBean = workflowDAO.get(workflowID);
             String path = item.dataString();
+
             if (processor.isOutput() && hasValidData(path)) {
 
                 DataType type = DataType.String;
@@ -193,7 +206,7 @@ public class WorkflowsDBListener implements WorkflowListener {
                 inputDAO.add(new Input(new InputID(workflowBean.getId(), path, processor.getName()), type));
                 logger.print(TAG + "Added input '" + path + "'");
             }
-            updateProcessor(processor);
+            updateProcessor(processor, workflowBean);
 
         } catch (java.net.URISyntaxException ex) {
             logger.warning(TAG + ex.getMessage());
@@ -209,7 +222,7 @@ public class WorkflowsDBListener implements WorkflowListener {
                 && !path.equals("void") && !path.equals("null");
     }
 
-    private void updateProcessor(fr.cnrs.i3s.moteur2.processor.Processor processor) {
+    private void updateProcessor(fr.cnrs.i3s.moteur2.processor.Processor processor, Workflow workflowBean) {
 
         if (!processor.isInput() && !processor.isOutput() && !processor.isConstant() && !processor.isBoring()) {
             try {
