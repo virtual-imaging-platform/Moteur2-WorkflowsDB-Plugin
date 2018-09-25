@@ -104,8 +104,9 @@ public class WorkflowsDBListener implements WorkflowListener {
                     user = line.substring(line.lastIndexOf("=") + 1);
                     br.close();
                 }
-                workflowBean = new Workflow(workflowID, user, WorkflowStatus.Queued,
-                        new Date(), null, null, null, null, null);
+                workflowBean = new Workflow(
+                    workflowID, user, WorkflowStatus.Queued,
+                    new Date(), null, null, null, null, null, null);
                 workflowDAO.add(workflowBean);
             }
         } catch (java.io.IOException ex) {
