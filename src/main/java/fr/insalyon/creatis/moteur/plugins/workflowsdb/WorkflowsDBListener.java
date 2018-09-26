@@ -91,10 +91,8 @@ public class WorkflowsDBListener implements WorkflowListener {
                     new Date(), null, null, null, null, null, null);
                 workflowDAO.add(workflowBean);
             }
-        } catch (java.io.IOException ex) {
-            logger.warning(TAG + ex.getMessage());
-        } catch (WorkflowsDBDAOException ex) {
-            logger.warning(TAG + ex.getMessage());
+        } catch (java.io.IOException | WorkflowsDBDAOException ex) {
+            logger.warning(TAG + "Exception initializing plugin : " + ex.getMessage());
         }
     }
 
@@ -107,7 +105,7 @@ public class WorkflowsDBListener implements WorkflowListener {
             workflowDAO.update(workflowBean);
 
         } catch (WorkflowsDBDAOException ex) {
-            logger.warning(TAG + ex.getMessage());
+            logger.warning(TAG + "Exception on executionStarted : " + ex.getMessage());
         }
     }
 
@@ -126,7 +124,7 @@ public class WorkflowsDBListener implements WorkflowListener {
             workflowDAO.update(workflowBean);
 
         } catch (WorkflowsDBDAOException ex) {
-            logger.warning(TAG + ex.getMessage());
+            logger.warning(TAG + "Exception on executionCompleted : " + ex.getMessage());
         }
     }
 
@@ -138,7 +136,7 @@ public class WorkflowsDBListener implements WorkflowListener {
             updateProcessor(processor, workflowDAO.get(workflowID));
 
         } catch (WorkflowsDBDAOException ex) {
-            logger.warning(TAG + ex.getMessage());
+            logger.warning(TAG + "Exception on processorRun : " + ex.getMessage());
         }
     }
 
@@ -151,7 +149,7 @@ public class WorkflowsDBListener implements WorkflowListener {
             updateProcessor(processor, workflowDAO.get(workflowID));
 
         } catch (WorkflowsDBDAOException ex) {
-            logger.warning(TAG + ex.getMessage());
+            logger.warning(TAG + "Exception on processorRan : " + ex.getMessage());
         }
     }
 
@@ -194,10 +192,10 @@ public class WorkflowsDBListener implements WorkflowListener {
             updateProcessor(processor, workflowBean);
 
         } catch (java.net.URISyntaxException ex) {
-            logger.warning(TAG + ex.getMessage());
+            logger.warning(TAG + "Exception on processorReceived : " + ex.getMessage());
         } catch (WorkflowsDBDAOException ex) {
             if (!ex.getMessage().contains("duplicate key value")) {
-                logger.warning(TAG + ex.getMessage());
+                logger.warning(TAG + "Exception on processorReceived : " + ex.getMessage());
             }
         }
     }
@@ -240,7 +238,7 @@ public class WorkflowsDBListener implements WorkflowListener {
                             processor.getNRuns(), processor.getNpending(), processor.getNFailures()));
                 }
             } catch (WorkflowsDBDAOException ex) {
-                logger.warning(TAG + ex.getMessage());
+                logger.warning(TAG + "Exception on updateProcessor : " + ex.getMessage());
 
             }
         }
