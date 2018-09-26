@@ -32,35 +32,17 @@
  */
 package fr.insalyon.creatis.moteur.plugins.workflowsdb;
 
-import fr.cnrs.i3s.moteur2.data.Data;
-import fr.cnrs.i3s.moteur2.data.DataItem;
-import fr.cnrs.i3s.moteur2.data.DataLine;
+import fr.cnrs.i3s.moteur2.data.*;
 import fr.cnrs.i3s.moteur2.execution.WorkflowListener;
 import fr.cnrs.i3s.moteur2.log.Log;
 import fr.cnrs.i3s.moteur2.processor.OutputPort;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.bean.DataType;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.bean.Input;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.bean.InputID;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.bean.Output;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.bean.OutputID;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.bean.Processor;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.bean.ProcessorID;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.bean.Workflow;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.bean.WorkflowStatus;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.InputDAO;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.OutputDAO;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.ProcessorDAO;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.WorkflowDAO;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.WorkflowsDBDAOException;
-import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.WorkflowsDBDAOFactory;
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.bean.*;
+import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.*;
+
+import java.io.*;
 import java.net.URI;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -109,10 +91,8 @@ public class WorkflowsDBListener implements WorkflowListener {
                     new Date(), null, null, null, null, null, null);
                 workflowDAO.add(workflowBean);
             }
-        } catch (java.io.IOException ex) {
-            logger.warning(TAG + ex.getMessage());
-        } catch (WorkflowsDBDAOException ex) {
-            logger.warning(TAG + ex.getMessage());
+        } catch (java.io.IOException | WorkflowsDBDAOException ex) {
+            logger.warning(TAG + "Exception initializing plugin : " + ex.getMessage());
         }
     }
 
@@ -125,7 +105,7 @@ public class WorkflowsDBListener implements WorkflowListener {
             workflowDAO.update(workflowBean);
 
         } catch (WorkflowsDBDAOException ex) {
-            logger.warning(TAG + ex.getMessage());
+            logger.warning(TAG + "Exception on executionStarted : " + ex.getMessage());
         }
     }
 
@@ -144,7 +124,7 @@ public class WorkflowsDBListener implements WorkflowListener {
             workflowDAO.update(workflowBean);
 
         } catch (WorkflowsDBDAOException ex) {
-            logger.warning(TAG + ex.getMessage());
+            logger.warning(TAG + "Exception on executionCompleted : " + ex.getMessage());
         }
     }
 
@@ -156,7 +136,7 @@ public class WorkflowsDBListener implements WorkflowListener {
             updateProcessor(processor, workflowDAO.get(workflowID));
 
         } catch (WorkflowsDBDAOException ex) {
-            logger.warning(TAG + ex.getMessage());
+            logger.warning(TAG + "Exception on processorRun : " + ex.getMessage());
         }
     }
 
@@ -169,7 +149,7 @@ public class WorkflowsDBListener implements WorkflowListener {
             updateProcessor(processor, workflowDAO.get(workflowID));
 
         } catch (WorkflowsDBDAOException ex) {
-            logger.warning(TAG + ex.getMessage());
+            logger.warning(TAG + "Exception on processorRan : " + ex.getMessage());
         }
     }
 
@@ -188,20 +168,22 @@ public class WorkflowsDBListener implements WorkflowListener {
             String path = item.dataString();
 
             if (processor.isOutput() && hasValidData(path)) {
+                logger.print(TAG + "Received output '" + path + "'");
 
                 DataType type = DataType.String;
-                if (path.startsWith("lfn://")) {
-                    path = new URI(item.dataString().toString()).getPath();
+                if (isUri(path)) {
+                    path = new URI(item.dataString()).getPath();
                     type = DataType.URI;
                 }
                 outputDAO.add(new Output(new OutputID(workflowBean.getId(), path, processor.getName()), type, port));
                 logger.print(TAG + "Added output '" + path + "'");
 
             } else if (processor.isInput() && !processor.isConstant() && hasValidData(path)) {
+                logger.print(TAG + "Received input '" + path + "'");
 
                 DataType type = DataType.String;
-                if (path.startsWith("lfn://")) {
-                    path = new URI(item.dataString().toString()).getPath();
+                if (isUri(path)) {
+                    path = new URI(item.dataString()).getPath();
                     type = DataType.URI;
                 }
                 inputDAO.add(new Input(new InputID(workflowBean.getId(), path, processor.getName()), type));
@@ -210,12 +192,26 @@ public class WorkflowsDBListener implements WorkflowListener {
             updateProcessor(processor, workflowBean);
 
         } catch (java.net.URISyntaxException ex) {
-            logger.warning(TAG + ex.getMessage());
+            logger.warning(TAG + "Exception on processorReceived : " + ex.getMessage());
         } catch (WorkflowsDBDAOException ex) {
             if (!ex.getMessage().contains("duplicate key value")) {
-                logger.warning(TAG + ex.getMessage());
+                logger.warning(TAG + "Exception on processorReceived : " + ex.getMessage());
             }
         }
+    }
+
+    private Pattern uriPattern = Pattern.compile("^\\w+:/{1,3}[^/]");
+
+    /**
+     * Detect if a string is an URI
+     *
+     * It is not an complete check of the URI format, it checks he beginning :
+     * A protocol followed by some slashs (1 to 3)
+     * @param s
+     * @return
+     */
+    public Boolean isUri(String s) {
+        return uriPattern.matcher(s).find();
     }
 
     private boolean hasValidData(String path) {
@@ -242,7 +238,7 @@ public class WorkflowsDBListener implements WorkflowListener {
                             processor.getNRuns(), processor.getNpending(), processor.getNFailures()));
                 }
             } catch (WorkflowsDBDAOException ex) {
-                logger.warning(TAG + ex.getMessage());
+                logger.warning(TAG + "Exception on updateProcessor : " + ex.getMessage());
 
             }
         }
