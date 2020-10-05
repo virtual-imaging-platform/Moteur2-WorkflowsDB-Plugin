@@ -4,7 +4,7 @@
     <groupId>fr.insalyon.creatis</groupId>
     <artifactId>moteur2-workflowsdb-plugin</artifactId>
     <packaging>jar</packaging>
-    <version>1.4</version>
+    <version>1.5-SNAPSHOT</version>
     <name>Moteur2-WorkflowsDB-Plugin</name>
 
     <properties>
