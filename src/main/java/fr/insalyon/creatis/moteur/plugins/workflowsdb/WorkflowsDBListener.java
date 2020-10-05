@@ -32,7 +32,9 @@
  */
 package fr.insalyon.creatis.moteur.plugins.workflowsdb;
 
-import fr.cnrs.i3s.moteur2.data.*;
+import fr.cnrs.i3s.moteur2.data.Data;
+import fr.cnrs.i3s.moteur2.data.DataItem;
+import fr.cnrs.i3s.moteur2.data.DataLine;
 import fr.cnrs.i3s.moteur2.execution.WorkflowListener;
 import fr.cnrs.i3s.moteur2.log.Log;
 import fr.cnrs.i3s.moteur2.processor.OutputPort;
@@ -41,7 +43,8 @@ import fr.insalyon.creatis.moteur.plugins.workflowsdb.dao.*;
 
 import java.io.*;
 import java.net.URI;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.regex.Pattern;
 
 /**
@@ -61,11 +64,13 @@ public class WorkflowsDBListener implements WorkflowListener {
     public WorkflowsDBListener(fr.cnrs.i3s.moteur2.execution.Workflow workflow) {
 
         try {
+            logger.print(TAG + "Starting plugin");
 
-            workflowDAO = WorkflowsDBDAOFactory.getInstance().getWorkflowDAO();
-            processorDAO = WorkflowsDBDAOFactory.getInstance().getProcessorDAO();
-            inputDAO = WorkflowsDBDAOFactory.getInstance().getInputDAO();
-            outputDAO = WorkflowsDBDAOFactory.getInstance().getOutputDAO();
+            WorkflowsDBDAOFactory workflowsDBDAOFactory = new WorkflowsDBDAOFactory();
+            workflowDAO = workflowsDBDAOFactory.getWorkflowDAO();
+            processorDAO = workflowsDBDAOFactory.getProcessorDAO();
+            inputDAO = workflowsDBDAOFactory.getInputDAO();
+            outputDAO = workflowsDBDAOFactory.getOutputDAO();
 
             String path = new File("").getAbsolutePath();
             workflowID = path.substring(path.lastIndexOf("/") + 1, path.length());
@@ -91,8 +96,9 @@ public class WorkflowsDBListener implements WorkflowListener {
                     new Date(), null, null, null, null, null, null);
                 workflowDAO.add(workflowBean);
             }
+            logger.print(TAG + "Plugin started.");
         } catch (java.io.IOException | WorkflowsDBDAOException ex) {
-            logger.warning(TAG + "Exception initializing plugin : " + ex.getMessage());
+            logger.warning(TAG + "Exception initializing plugin : " + ex.getMessage(), ex);
         }
     }
 
@@ -103,9 +109,8 @@ public class WorkflowsDBListener implements WorkflowListener {
             Workflow workflowBean = workflowDAO.get(workflowID);
             workflowBean.setStatus(WorkflowStatus.Running);
             workflowDAO.update(workflowBean);
-
         } catch (WorkflowsDBDAOException ex) {
-            logger.warning(TAG + "Exception on executionStarted : " + ex.getMessage());
+            logger.warning(TAG + "Exception on executionStarted : " + ex.getMessage(), ex);
         }
     }
 
@@ -124,19 +129,18 @@ public class WorkflowsDBListener implements WorkflowListener {
             workflowDAO.update(workflowBean);
 
         } catch (WorkflowsDBDAOException ex) {
-            logger.warning(TAG + "Exception on executionCompleted : " + ex.getMessage());
+            logger.warning(TAG + "Exception on executionCompleted : " + ex.getMessage(), ex);
         }
     }
 
     @Override
     public void processorRun(fr.cnrs.i3s.moteur2.execution.Workflow workflow,
             fr.cnrs.i3s.moteur2.processor.Processor processor) {
-
         try {
             updateProcessor(processor, workflowDAO.get(workflowID));
 
         } catch (WorkflowsDBDAOException ex) {
-            logger.warning(TAG + "Exception on processorRun : " + ex.getMessage());
+            logger.warning(TAG + "Exception on processorRun : " + ex.getMessage(), ex);
         }
     }
 
@@ -149,7 +153,7 @@ public class WorkflowsDBListener implements WorkflowListener {
             updateProcessor(processor, workflowDAO.get(workflowID));
 
         } catch (WorkflowsDBDAOException ex) {
-            logger.warning(TAG + "Exception on processorRan : " + ex.getMessage());
+            logger.warning(TAG + "Exception on processorRan : " + ex.getMessage(), ex);
         }
     }
 
@@ -192,10 +196,10 @@ public class WorkflowsDBListener implements WorkflowListener {
             updateProcessor(processor, workflowBean);
 
         } catch (java.net.URISyntaxException ex) {
-            logger.warning(TAG + "Exception on processorReceived : " + ex.getMessage());
+            logger.warning(TAG + "Exception on processorReceived : " + ex.getMessage(), ex);
         } catch (WorkflowsDBDAOException ex) {
             if (!ex.getMessage().contains("duplicate key value")) {
-                logger.warning(TAG + "Exception on processorReceived : " + ex.getMessage());
+                logger.warning(TAG + "Exception on processorReceived : " + ex.getMessage(), ex);
             }
         }
     }
@@ -220,7 +224,6 @@ public class WorkflowsDBListener implements WorkflowListener {
     }
 
     private void updateProcessor(fr.cnrs.i3s.moteur2.processor.Processor processor, Workflow workflowBean) {
-
         if (!processor.isInput() && !processor.isOutput() && !processor.isConstant() && !processor.isBoring()) {
             try {
 
@@ -238,8 +241,7 @@ public class WorkflowsDBListener implements WorkflowListener {
                             processor.getNRuns(), processor.getNpending(), processor.getNFailures()));
                 }
             } catch (WorkflowsDBDAOException ex) {
-                logger.warning(TAG + "Exception on updateProcessor : " + ex.getMessage());
-
+                logger.warning(TAG + "Exception on updateProcessor : " + ex.getMessage(), ex);
             }
         }
     }
