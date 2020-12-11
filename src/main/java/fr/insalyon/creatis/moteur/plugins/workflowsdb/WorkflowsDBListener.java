@@ -45,6 +45,7 @@ import java.io.*;
 import java.net.URI;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -121,15 +122,29 @@ public class WorkflowsDBListener implements WorkflowListener {
             Workflow workflowBean = workflowDAO.get(workflowID);
 
             if (completed) {
-                workflowBean.setStatus(WorkflowStatus.Completed);
+                boolean outputProduced = didWorkflowProduceOutput();
+                workflowBean.setStatus(outputProduced ?
+                        WorkflowStatus.Completed : WorkflowStatus.Failed);
+                logger.print(TAG + "Execution finished with output : " + outputProduced);
             } else {
-                workflowBean.setStatus(WorkflowStatus.Killed);
+                workflowBean.setStatus(WorkflowStatus.Failed);
             }
             workflowBean.setFinishedTime(new Date());
             workflowDAO.update(workflowBean);
 
         } catch (WorkflowsDBDAOException ex) {
             logger.warning(TAG + "Exception on executionCompleted : " + ex.getMessage(), ex);
+        }
+    }
+
+    private boolean didWorkflowProduceOutput() {
+
+        try {
+            List<Output> outputs = outputDAO.get(workflowID);
+            return ! outputs.isEmpty();
+        } catch (WorkflowsDBDAOException ex) {
+            logger.warning(TAG + "Exception on didWorkflowProduceOutput : " + ex.getMessage(), ex);
+            return true;
         }
     }
 
