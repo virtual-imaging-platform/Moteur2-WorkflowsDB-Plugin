@@ -50,6 +50,10 @@
                     <groupId>fr.cnrs.i3s</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>fr.insalyon.creatis.shiwapool</groupId>
+                    <artifactId>shiwa-pool-client</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
 
