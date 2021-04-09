@@ -43,6 +43,14 @@
             <artifactId>moteur2-common</artifactId>
             <version>0.9.21</version>
             <scope>provided</scope>
+            <!-- exclude most transitive dependencies, we only need
+            moteur2-common and jspf.core to compile -->
+            <exclusions>
+                <exclusion>
+                    <groupId>fr.cnrs.i3s</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -61,21 +69,25 @@
 
     <repositories>
         <repository>
-            <id>creatis-thirdparty</id>
-            <url>http://vip.creatis.insa-lyon.fr:9007/nexus/content/repositories/thirdparty</url>
+            <id>creatis</id>
+            <name>Creatis Insa Lyon repository [creatis]</name>
+            <url>https://vip.creatis.insa-lyon.fr:9007/nexus/repository/public</url>
         </repository>
     </repositories>
 
     <distributionManagement>
         <repository>
-            <id>releases</id>
-            <url>http://vip.creatis.insa-lyon.fr:9007/nexus/content/repositories/releases</url>
+            <id>creatis-releases</id>
+            <name>Internal Releases</name>
+            <url>https://vip.creatis.insa-lyon.fr:9007/nexus/repository/releases</url>
         </repository>
+
         <snapshotRepository>
-            <id>snapshots</id>
+            <id>creatis-snapshots</id>
             <name>Internal Snapshots</name>
-            <url>http://vip.creatis.insa-lyon.fr:9007/nexus/content/repositories/snapshots</url>
+            <url>https://vip.creatis.insa-lyon.fr:9007/nexus/repository/snapshots</url>
         </snapshotRepository>
+
     </distributionManagement>
 
 </project>
