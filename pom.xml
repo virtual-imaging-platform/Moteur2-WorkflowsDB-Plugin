@@ -4,13 +4,13 @@
     <groupId>fr.insalyon.creatis</groupId>
     <artifactId>moteur2-workflowsdb-plugin</artifactId>
     <packaging>jar</packaging>
-    <version>1.5</version>
+    <version>1.6</version>
     <name>Moteur2-WorkflowsDB-Plugin</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
     </properties>
 
     <build>
@@ -43,39 +43,61 @@
             <artifactId>moteur2-common</artifactId>
             <version>0.9.21</version>
             <scope>provided</scope>
+            <!-- exclude most transitive dependencies, we only need
+            moteur2-common and jspf.core to compile -->
+            <exclusions>
+                <exclusion>
+                    <groupId>fr.cnrs.i3s</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>fr.insalyon.creatis.shiwapool</groupId>
+                    <artifactId>shiwa-pool-client</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
-        <dependency>
+        <!--dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.23</version>
+        </dependency-->
+        <dependency>
+            <groupId>org.mariadb.jdbc</groupId>
+            <artifactId>mariadb-java-client</artifactId>
+            <version>2.1.2</version>
+            <scope>runtime</scope>
         </dependency>
 
         <dependency>
             <groupId>fr.insalyon.creatis</groupId>
             <artifactId>moteur2-workflowsdb-common</artifactId>
-            <version>1.5</version>
+            <version>1.6</version>
         </dependency>
 
     </dependencies>
 
     <repositories>
         <repository>
-            <id>creatis-thirdparty</id>
-            <url>http://vip.creatis.insa-lyon.fr:9007/nexus/content/repositories/thirdparty</url>
+            <id>creatis</id>
+            <name>Creatis Insa Lyon repository [creatis]</name>
+            <url>https://vip.creatis.insa-lyon.fr:9007/nexus/repository/public</url>
         </repository>
     </repositories>
 
     <distributionManagement>
         <repository>
-            <id>releases</id>
-            <url>http://vip.creatis.insa-lyon.fr:9007/nexus/content/repositories/releases</url>
+            <id>creatis-releases</id>
+            <name>Internal Releases</name>
+            <url>https://vip.creatis.insa-lyon.fr:9007/nexus/repository/releases</url>
         </repository>
+
         <snapshotRepository>
-            <id>snapshots</id>
+            <id>creatis-snapshots</id>
             <name>Internal Snapshots</name>
-            <url>http://vip.creatis.insa-lyon.fr:9007/nexus/content/repositories/snapshots</url>
+            <url>https://vip.creatis.insa-lyon.fr:9007/nexus/repository/snapshots</url>
         </snapshotRepository>
+
     </distributionManagement>
 
 </project>
