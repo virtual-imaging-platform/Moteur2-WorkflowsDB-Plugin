@@ -9,8 +9,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
     </properties>
 
     <build>
@@ -37,7 +37,6 @@
     </build>
 
     <dependencies>
-
         <dependency>
             <groupId>fr.cnrs.i3s</groupId>
             <artifactId>moteur2-common</artifactId>
@@ -57,11 +56,6 @@
             </exclusions>
         </dependency>
 
-        <!--dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.23</version>
-        </dependency-->
         <dependency>
             <groupId>org.mariadb.jdbc</groupId>
             <artifactId>mariadb-java-client</artifactId>
@@ -72,9 +66,8 @@
         <dependency>
             <groupId>fr.insalyon.creatis</groupId>
             <artifactId>moteur2-workflowsdb-common</artifactId>
-            <version>1.6</version>
+            <version>1.8.0-SNAPSHOT</version>
         </dependency>
-
     </dependencies>
 
     <repositories>

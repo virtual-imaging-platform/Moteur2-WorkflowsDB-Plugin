@@ -94,11 +94,11 @@ public class WorkflowsDBListener implements WorkflowListener {
                 }
                 workflowBean = new Workflow(
                     workflowID, user, WorkflowStatus.Queued,
-                    new Date(), null, null, null, null, null, null);
+                    new Date(), null, null, null, null, null, null, null);
                 workflowDAO.add(workflowBean);
             }
             logger.print(TAG + "Plugin started.");
-        } catch (java.io.IOException | WorkflowsDBDAOException ex) {
+        } catch (java.io.IOException | WorkflowsDBDAOException | WorkflowsDBException ex) {
             logger.warning(TAG + "Exception initializing plugin : " + ex.getMessage(), ex);
         }
     }
